@@ -1,0 +1,20 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  toyapp:
+    build:
+      context: ./toyapp
+    ports:
+      - "8000:8000"
+
+  # api (retrieval+generation, v1 collapsed per plan) is added in Phase 1
+  # once retrieval/Dockerfile exists -- not part of Week 1 scope.
+
+volumes:
+  qdrant_data:

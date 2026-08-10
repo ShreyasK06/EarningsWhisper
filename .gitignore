@@ -1,0 +1,11 @@
+data/raw/
+qdrant_data/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+*.egg-info/
+.pytest_cache/
+src/eval/metrics.db
+.claude-flow/
