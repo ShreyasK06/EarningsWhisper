@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS eval_runs (
   recall_at_5 REAL,
   precision_at_5 REAL,
   mrr REAL,
+  ndcg_at_5 REAL,
   faithfulness REAL,
   notes TEXT
 );
@@ -22,20 +23,25 @@ CREATE TABLE IF NOT EXISTS eval_runs (
 def get_connection() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH)
     conn.execute(SCHEMA)
+    existing_cols = {row[1] for row in conn.execute("PRAGMA table_info(eval_runs)")}
+    if "ndcg_at_5" not in existing_cols:
+        conn.execute("ALTER TABLE eval_runs ADD COLUMN ndcg_at_5 REAL")
+    conn.commit()
     return conn
 
 
 def record_run(run_id: str, timestamp: str, config_hash: str, recall_at_5: float,
-                precision_at_5: float, mrr: float, faithfulness: float | None, notes: str):
+                precision_at_5: float, mrr: float, ndcg_at_5: float | None,
+                faithfulness: float | None, notes: str):
     conn = get_connection()
     with conn:
         conn.execute(
             """
             INSERT OR REPLACE INTO eval_runs
-                (run_id, timestamp, config_hash, recall_at_5, precision_at_5, mrr, faithfulness, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (run_id, timestamp, config_hash, recall_at_5, precision_at_5, mrr, ndcg_at_5, faithfulness, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (run_id, timestamp, config_hash, recall_at_5, precision_at_5, mrr, faithfulness, notes),
+            (run_id, timestamp, config_hash, recall_at_5, precision_at_5, mrr, ndcg_at_5, faithfulness, notes),
         )
     conn.close()
 
