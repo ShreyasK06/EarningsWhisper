@@ -35,12 +35,26 @@ EMBEDDING_DIM = 384
 
 QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
 
+_model = None
+_client = None
+
+
+def get_model() -> SentenceTransformer:
+    global _model
+    if _model is None:
+        _model = SentenceTransformer(EMBEDDING_MODEL)
+    return _model
+
 
 def get_client() -> QdrantClient:
-    if config.QDRANT_HOST:
-        return QdrantClient(host=config.QDRANT_HOST, port=config.QDRANT_PORT)
-    Path(config.QDRANT_PATH).mkdir(parents=True, exist_ok=True)
-    return QdrantClient(path=config.QDRANT_PATH)
+    global _client
+    if _client is None:
+        if config.QDRANT_HOST:
+            _client = QdrantClient(host=config.QDRANT_HOST, port=config.QDRANT_PORT)
+        else:
+            Path(config.QDRANT_PATH).mkdir(parents=True, exist_ok=True)
+            _client = QdrantClient(path=config.QDRANT_PATH)
+    return _client
 
 
 def embed_query(model: SentenceTransformer, query: str):
@@ -74,7 +88,7 @@ def embed_and_load():
     chunks = load_chunks()
     print(f"Loaded {len(chunks)} chunks from {CHUNKS_PATH}")
 
-    model = SentenceTransformer(EMBEDDING_MODEL)
+    model = get_model()
     vectors = embed_documents(model, [c["text"] for c in chunks])
 
     client = get_client()
