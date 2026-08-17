@@ -1,4 +1,14 @@
+import pytest
+
 from src.ingestion import embed as embed_mod
+
+
+@pytest.fixture(autouse=True)
+def cleanup_embed_cache():
+    """Reset embed module's global cache after each test to prevent cross-file pollution."""
+    yield
+    embed_mod._model = None
+    embed_mod._client = None
 
 
 def test_get_model_returns_singleton(monkeypatch):
