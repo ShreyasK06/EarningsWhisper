@@ -1,27 +1,44 @@
 """Score generated trading signals against realized forward stock returns.
 
-CRITICAL: entry must be the next trading session's open if the filing was
-made outside regular market hours (before 9:30am or at/after 4:00pm ET) --
-using the same-day close for an after-hours filing is lookahead bias and
-produces fake results. We derive after-hours status from each filing's
-exact `filed_datetime` (the SEC ACCEPTANCE-DATETIME captured by
-src/ingestion/parse.py) rather than a caller-supplied flag, since that
-timestamp already carries the Eastern local hour.
+CRITICAL: entry must be the next trading session's open unless the filing
+landed strictly before market open (9:30am ET) -- using a same-day price
+point that occurred before the filing (or using daily bars to approximate
+an intraday entry) is lookahead bias and produces fake results. We only
+have daily Open/Close bars, so there is no valid same-day entry price for
+a filing made at/after 9:30am ET, whether that's during the regular
+session or after the 4:00pm close: only a genuinely pre-market filing
+(before 9:30am ET) can safely use that day's own open. We derive this
+status from each filing's exact `filed_datetime` (the SEC
+ACCEPTANCE-DATETIME captured by src/ingestion/parse.py) rather than a
+caller-supplied flag, since that timestamp already carries the Eastern
+local hour.
 """
 from datetime import timedelta
 
 import pandas as pd
 import yfinance as yf
 
-MARKET_CLOSE_HOUR_ET = 16
 MARKET_OPEN_HOUR_ET = 9
+MARKET_OPEN_MINUTE_ET = 30
+MARKET_CLOSE_HOUR_ET = 16
 
 
 def filed_after_market_close(filed_datetime: str) -> bool:
-    """SEC ACCEPTANCE-DATETIME is Eastern local time; treat before 9am or
-    at/after 4pm ET as outside regular trading hours."""
+    """SEC ACCEPTANCE-DATETIME is Eastern local time. Returns True whenever
+    the filing landed at or after market open (9:30am ET) -- including
+    during the regular trading session -- through end of day, i.e. whenever
+    there is no same-day price point that occurs chronologically after the
+    filing. Only a filing strictly before 9:30am ET (genuinely pre-market)
+    can safely use that day's own open as an entry price; anything from
+    market open onward must wait for the next session's open. Daily bars
+    give no intraday granularity, so an intraday filing has no valid
+    same-day entry point that postdates the news."""
     ts = pd.Timestamp(filed_datetime)
-    return ts.hour >= MARKET_CLOSE_HOUR_ET or ts.hour < MARKET_OPEN_HOUR_ET
+    if ts.hour < MARKET_OPEN_HOUR_ET:
+        return False
+    if ts.hour == MARKET_OPEN_HOUR_ET and ts.minute < MARKET_OPEN_MINUTE_ET:
+        return False
+    return True
 
 
 def forward_return(ticker: str, filed_datetime: str, horizon: int = 1):

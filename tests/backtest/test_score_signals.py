@@ -20,9 +20,11 @@ class _FakeTicker:
 
 
 def test_filed_after_market_close_detects_after_hours():
-    assert score_mod.filed_after_market_close("2026-05-01T20:15:00") is True
-    assert score_mod.filed_after_market_close("2026-05-01T06:00:00") is True
-    assert score_mod.filed_after_market_close("2026-05-01T10:00:00") is False
+    assert score_mod.filed_after_market_close("2026-05-01T20:15:00") is True  # after close
+    assert score_mod.filed_after_market_close("2026-05-01T06:00:00") is False  # genuinely pre-market
+    assert score_mod.filed_after_market_close("2026-05-01T10:00:00") is True  # intraday, no valid same-day entry
+    assert score_mod.filed_after_market_close("2026-05-01T09:29:00") is False  # still pre-market
+    assert score_mod.filed_after_market_close("2026-05-01T09:30:00") is True  # exactly at open
 
 
 def test_forward_return_uses_next_day_open_for_after_hours_filing(monkeypatch):
@@ -40,7 +42,10 @@ def test_forward_return_uses_next_day_open_for_after_hours_filing(monkeypatch):
     assert r == pytest.approx((212 - 200) / 200)
 
 
-def test_forward_return_uses_same_day_open_for_during_hours_filing(monkeypatch):
+def test_forward_return_uses_same_day_open_for_premarket_filing(monkeypatch):
+    # Filed 7:00am on 2026-05-01 (genuinely pre-market, before 9:30am ET) ->
+    # that day's own open occurs chronologically AFTER the filing, so it's a
+    # valid entry price.
     prices = _make_price_frame(
         ["2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02"],
         opens=[100, 101, 102, 103],
@@ -48,9 +53,26 @@ def test_forward_return_uses_same_day_open_for_during_hours_filing(monkeypatch):
     )
     monkeypatch.setattr(score_mod.yf, "Ticker", _FakeTicker(prices))
 
-    r = score_mod.forward_return("AAPL", "2026-05-01T10:00:00", horizon=1)
+    r = score_mod.forward_return("AAPL", "2026-05-01T07:00:00", horizon=1)
 
     assert r == pytest.approx((104 - 102) / 102)
+
+
+def test_forward_return_uses_next_day_open_for_intraday_filing(monkeypatch):
+    # Filed 12:00pm on 2026-05-01 (during regular trading hours) -> that
+    # day's open (9:30am) already happened before the filing, so it's not a
+    # valid entry; must wait for 2026-05-02's open, same as an after-hours
+    # filing.
+    prices = _make_price_frame(
+        ["2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03"],
+        opens=[100, 101, 102, 200, 210],
+        closes=[101, 102, 103, 205, 212],
+    )
+    monkeypatch.setattr(score_mod.yf, "Ticker", _FakeTicker(prices))
+
+    r = score_mod.forward_return("AAPL", "2026-05-01T12:00:00", horizon=1)
+
+    assert r == pytest.approx((212 - 200) / 200)
 
 
 def test_forward_return_returns_none_when_insufficient_future_data(monkeypatch):
