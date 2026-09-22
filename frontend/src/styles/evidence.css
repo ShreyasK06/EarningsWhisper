@@ -1,0 +1,157 @@
+/* ==========================================================================
+   Evidence surface — EvidencePanel + EvidenceRow. See
+   frontend-design-plan.md §4.4. Depends on tokens.css + base.css.
+   ========================================================================== */
+
+/* ---- EvidencePanel ---- */
+
+.evidence-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--paper-1);
+  overflow-y: auto;
+  animation: rise var(--dur-3) var(--ease-out) backwards;
+}
+
+.evidence-panel--drawer {
+  border-left: var(--border);
+  border-top: 3px solid var(--accent);
+  box-shadow: var(--shadow-drawer);
+  padding: var(--s-5);
+}
+
+.evidence-panel--inline {
+  border-left: 2px solid var(--accent);
+  padding: var(--s-3) var(--s-4);
+  margin: var(--s-2) 0 var(--s-3);
+}
+
+.evidence-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+  border-bottom: var(--border-hair);
+  padding-bottom: var(--s-3);
+  margin-bottom: var(--s-3);
+}
+
+.evidence-panel__heading {
+  min-width: 0;
+}
+
+.evidence-panel__chunk {
+  color: var(--ink-0);
+  overflow-wrap: anywhere;
+}
+
+.evidence-panel__section {
+  color: var(--ink-2);
+  margin-top: var(--s-1);
+}
+
+.evidence-panel__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: var(--r-1);
+  color: var(--ink-2);
+  transition: background-color var(--dur-1) var(--ease-out);
+}
+
+.evidence-panel__close:hover {
+  background: var(--paper-2);
+}
+
+.evidence-panel__body {
+  flex: 1;
+}
+
+.evidence-panel__quote {
+  position: relative;
+  border-left: 1px solid var(--rule);
+  padding-left: var(--s-4);
+  color: var(--ink-1);
+  overflow-wrap: anywhere;
+}
+
+.evidence-panel__glyph {
+  position: absolute;
+  left: calc(-1 * var(--s-3));
+  top: -0.35em;
+  color: var(--rule-strong);
+  width: 28px;
+  height: 28px;
+}
+
+.evidence-panel__notice {
+  border: 1px solid var(--warn);
+  background: var(--warn-wash);
+  border-left-width: 3px;
+  border-radius: var(--r-1);
+  padding: var(--s-3) var(--s-4);
+  color: var(--ink-1);
+}
+
+.evidence-panel__footer {
+  margin-top: var(--s-4);
+  color: var(--ink-3);
+}
+
+/* ---- EvidenceRow — shared by AnswerBody and SignalCard ---- */
+
+.evidence-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-1);
+  text-align: left;
+  transition: background-color var(--dur-1) var(--ease-out);
+}
+
+.evidence-row:hover {
+  background: var(--paper-2);
+}
+
+.evidence-row:hover .evidence-row__chunk {
+  color: var(--accent);
+}
+
+.evidence-row__index {
+  color: var(--ink-3);
+}
+
+.evidence-row__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.evidence-row__section {
+  color: var(--ink-1);
+}
+
+.evidence-row__preview {
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.evidence-row__chunk {
+  color: var(--ink-3);
+  overflow-wrap: anywhere;
+  text-align: right;
+  transition: color var(--dur-1) var(--ease-out);
+}

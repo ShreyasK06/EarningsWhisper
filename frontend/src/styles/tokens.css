@@ -1,0 +1,161 @@
+/* ==========================================================================
+   Design tokens — Earnings Whisper
+   Every value here is normative (see frontend design plan §2). Names are
+   fixed contracts consumed by shell.css, rail.css, landing.css,
+   transcript.css, signal.css, evidence.css, composer.css. Do not rename.
+   ========================================================================== */
+
+:root {
+  /* ---- 2.1 Color — warm neutral field. one gray family, warm throughout. ---- */
+  --paper-0: #faf8f3; /* page field / transcript ground */
+  --paper-1: #f4f1e9; /* app surfaces: rail, composer band, signal card */
+  --paper-2: #ebe7dc; /* inset: query entries, input field, hover rows */
+  --paper-3: #e0dbcc; /* pressed / active row */
+
+  --rule-hair: #ded8ca; /* 1px separators, low emphasis (entry dividers) */
+  --rule: #cdc5b2; /* standard borders (panels, cards, inputs) */
+  --rule-strong: #b3a992; /* emphasized dividers, decorative glyphs */
+
+  /* ---- ink ramp ---- */
+  --ink-0: #15191b; /* primary text, headings */
+  --ink-1: #3c4245; /* body prose, reasoning */
+  --ink-2: #6e6a5f; /* labels, meta, gutter text (~4.9:1 on paper-0) */
+  --ink-3: #928d80; /* placeholder, disabled, decorative ONLY (~2.9:1) */
+
+  /* ---- semantic data colors. NEVER used for chrome/buttons/decoration. ---- */
+  --bull: #2e6b4c;
+  --bull-ink: #1e4d36; /* use when the color is text sitting on paper */
+  --bear: #8c3b2e;
+  --bear-ink: #6f2c22;
+  --flat: #7a6f5c; /* the *neutral signal*. distinct from --ink-2. */
+  --flat-ink: #5c5344;
+
+  /* ---- the single brand accent ---- */
+  --accent: #1d3557; /* ledger navy */
+  --accent-hi: #24406b; /* hover */
+  --accent-lo: #16283f; /* active / pressed */
+  --accent-wash: #e8ecf2; /* tinted surface behind accent content */
+
+  /* ---- system status. deliberately NOT bear/bull, so "offline" never
+         reads as a bearish call. ---- */
+  --warn: #8a6d1f;
+  --warn-wash: #f5eedb;
+
+  /* ---- coverage tag hues. purely identifying color for the 5 rail tickers
+         (a small dot, never a sentiment cue) — desaturated jewel tones,
+         distinct from --bull/--bear/--flat/--accent/--warn so they can never
+         be misread as a signal or a status. ---- */
+  --tag-violet: #6c5b8f;
+  --tag-teal: #2f7d78;
+  --tag-amber: #b3812f;
+  --tag-slate: #47648f;
+  --tag-rose: #a15a72;
+
+  /* ---- 2.3 Typography — families ---- */
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
+
+  /* Fraunces axis lock — apply everywhere --font-display is used */
+  --fraunces-axes: "opsz" 144, "SOFT" 0, "WONK" 0;
+
+  /* ---- type scale: paired size / line-height / tracking per role.
+         base.css turns these into the .t-* utility classes. ---- */
+  --t-display-size: clamp(2rem, 1.4rem + 2.2vw, 2.75rem);
+  --t-display-lh: 1.04;
+  --t-display-ws: -0.02em;
+
+  --t-h1-size: 1.75rem;
+  --t-h1-lh: 1.12;
+  --t-h1-ws: -0.015em;
+
+  --t-h2-size: 1.1875rem;
+  --t-h2-lh: 1.25;
+  --t-h2-ws: -0.01em;
+
+  --t-body-size: 1rem;
+  --t-body-lh: 1.62;
+  --t-body-ws: 0;
+
+  --t-body-sm-size: 0.9375rem;
+  --t-body-sm-lh: 1.55;
+  --t-body-sm-ws: 0;
+
+  --t-ui-size: 0.875rem;
+  --t-ui-lh: 1.4;
+  --t-ui-ws: 0;
+
+  --t-data-size: 0.9375rem;
+  --t-data-lh: 1.3;
+  --t-data-ws: 0.01em;
+
+  --t-data-lg-size: 1.5rem;
+  --t-data-lg-lh: 1;
+  --t-data-lg-ws: -0.01em;
+
+  --t-meta-size: 0.75rem;
+  --t-meta-lh: 1.35;
+  --t-meta-ws: 0.045em;
+
+  --t-micro-size: 0.6875rem;
+  --t-micro-lh: 1.3;
+  --t-micro-ws: 0.06em;
+
+  /* ---- 2.4 Spacing, measure, layout metrics ---- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+  --s-9: 96px;
+
+  --measure: 68ch; /* prose max-width */
+  --rail-w: 264px;
+  --drawer-w: 380px;
+  --entry-gutter: 88px; /* transcript left meta gutter, >=1180px */
+  --entry-gutter-md: 72px; /* 900-1179px */
+
+  /* Breakpoints (documentation only — custom properties cannot be used
+     inside @media, so hard-code these px values and keep them in sync):
+     --bp-sm: 640px   --bp-md: 900px   --bp-lg: 1180px */
+
+  /* ---- 2.5 Borders, radius, shadow ---- */
+  --r-0: 0; /* structural surfaces: rail, panels, entries, cards, drawer */
+  --r-1: 2px; /* small interactive controls: chips, buttons, input, rows */
+  --r-2: 3px; /* maximum radius in the system. nothing exceeds this. */
+
+  --border-hair: 1px solid var(--rule-hair);
+  --border: 1px solid var(--rule);
+
+  --shadow-pop: 0 1px 0 var(--rule-hair), 0 8px 24px -12px rgba(58, 48, 30, 0.18);
+  --shadow-drawer: -24px 0 48px -28px rgba(58, 48, 30, 0.22);
+
+  /* ---- 2.6 Motion ---- */
+  --dur-1: 120ms; /* press / hover */
+  --dur-2: 200ms; /* focus, chip expand, small reveals */
+  --dur-3: 320ms; /* entry mount, drawer content, meter fill */
+  --dur-4: 520ms; /* landing stagger */
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1); /* weighty decelerate */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-snap: cubic-bezier(0.34, 1.26, 0.64, 1); /* slight overshoot */
+  --ease-spring: cubic-bezier(0.5, 1.4, 0.4, 1); /* pronounced pop-in, mount-only */
+
+  --dur-5: 900ms; /* slow ambient (grain drift, status glow breathing) */
+
+  /* ---- 2.7 Z-index ---- */
+  --z-base: 0;
+  --z-sticky: 10;
+  --z-drawer: 40;
+  --z-overlay: 50;
+  --z-toast: 60;
+}
+
+/* ==========================================================================
+   Dark theme — OPTIONAL, Task 10 only. Ship light-only for now (plan §2.2).
+   Left undefined and unwired intentionally: do not set data-theme or
+   prefers-color-scheme until Task 10 actually ships a full dark pass.
+   ========================================================================== */

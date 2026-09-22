@@ -1,0 +1,447 @@
+/* ==========================================================================
+   Base layer — reset, root sizing, texture, focus, typography utilities,
+   accessibility helpers, motion guard, and shared keyframes.
+   Depends on tokens.css being imported first.
+   ========================================================================== */
+
+/* ---- reset ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html,
+body,
+#root {
+  height: 100dvh; /* NOT 100vh — fixes the iOS Safari viewport-jump bug */
+}
+
+body {
+  background: var(--paper-0);
+  color: var(--ink-0);
+  font-family: var(--font-body);
+  font-size: var(--t-body-size);
+  line-height: var(--t-body-lh);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  position: relative;
+}
+
+#root {
+  isolation: isolate;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+}
+
+ul,
+ol {
+  list-style: none;
+  padding: 0;
+}
+
+/* font-variant-numeric: tabular-nums globally on mono, and on any figure. */
+:where(code, kbd, samp) {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- warm-grain paper texture. inline SVG feTurbulence data URI —
+   no external asset, no network request, no BASE_URL concern. ---- */
+body::after {
+  content: "";
+  position: fixed;
+  inset: -10% -10%;
+  z-index: var(--z-base);
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  animation: grain-drift 16s ease-in-out infinite;
+}
+
+/* ---- signature top bar — a fixed brand strip across the whole app.
+   The one place the full coverage palette appears together, so it reads as
+   a deliberate identity mark rather than color used for its own sake. ---- */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: var(--z-toast);
+  background: linear-gradient(
+    90deg,
+    var(--tag-violet),
+    var(--tag-teal),
+    var(--tag-amber),
+    var(--tag-slate),
+    var(--tag-rose)
+  );
+}
+
+/* ---- focus ---- */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--r-1);
+}
+
+/* ---- skip link ---- */
+.skip-link {
+  position: fixed;
+  top: var(--s-2);
+  left: var(--s-2);
+  z-index: var(--z-toast);
+  transform: translateY(-160%);
+  background: var(--accent);
+  color: var(--paper-0);
+  font-family: var(--font-mono);
+  font-size: var(--t-ui-size);
+  line-height: var(--t-ui-lh);
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--r-1);
+  transition: transform var(--dur-2) var(--ease-out);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+  outline-color: var(--paper-0);
+}
+
+/* ---- visually hidden but still available to assistive tech ---- */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ==========================================================================
+   Typography utility classes — one per role in the §2.3 type scale table.
+   Compose these instead of restating font numbers in component CSS.
+   Text-transform is deliberately NOT baked in here: --t-meta and --t-micro
+   are also used for content that must not be uppercased (e.g. proper nouns
+   like company names) — components opt into uppercase per-instance.
+   ========================================================================== */
+
+.t-display {
+  font-family: var(--font-display);
+  font-variation-settings: var(--fraunces-axes);
+  font-weight: 700;
+  font-size: var(--t-display-size);
+  line-height: var(--t-display-lh);
+  letter-spacing: var(--t-display-ws);
+}
+
+.t-h1 {
+  font-family: var(--font-display);
+  font-variation-settings: var(--fraunces-axes);
+  font-weight: 600;
+  font-size: var(--t-h1-size);
+  line-height: var(--t-h1-lh);
+  letter-spacing: var(--t-h1-ws);
+}
+
+.t-h2 {
+  font-family: var(--font-display);
+  font-variation-settings: var(--fraunces-axes);
+  font-weight: 600;
+  font-size: var(--t-h2-size);
+  line-height: var(--t-h2-lh);
+  letter-spacing: var(--t-h2-ws);
+}
+
+.t-body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--t-body-size);
+  line-height: var(--t-body-lh);
+  letter-spacing: var(--t-body-ws);
+}
+
+.t-body-sm {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--t-body-sm-size);
+  line-height: var(--t-body-sm-lh);
+  letter-spacing: var(--t-body-sm-ws);
+}
+
+.t-ui {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: var(--t-ui-size);
+  line-height: var(--t-ui-lh);
+  letter-spacing: var(--t-ui-ws);
+}
+
+.t-data {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: var(--t-data-size);
+  line-height: var(--t-data-lh);
+  letter-spacing: var(--t-data-ws);
+  font-variant-numeric: tabular-nums;
+}
+
+.t-data-lg {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: var(--t-data-lg-size);
+  line-height: var(--t-data-lg-lh);
+  letter-spacing: var(--t-data-lg-ws);
+  font-variant-numeric: tabular-nums;
+}
+
+.t-meta {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: var(--t-meta-size);
+  line-height: var(--t-meta-lh);
+  letter-spacing: var(--t-meta-ws);
+  font-variant-numeric: tabular-nums;
+}
+
+.t-micro {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: var(--t-micro-size);
+  line-height: var(--t-micro-lh);
+  letter-spacing: var(--t-micro-ws);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Shared keyframes — referenced by name across components. Defined once
+   here so Tasks 2–8 never redeclare them.
+   ========================================================================== */
+
+/* Landing panel's single directed load sequence (plan §4.5). */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Transcript entry mount (plan §4.2). */
+@keyframes entry-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* Skeleton shimmer sweep for the lookup pending state (plan §4.2). */
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(200%);
+  }
+}
+
+/* Status-square / current-step pulse (plan §4.1, §4.2). */
+@keyframes pulse {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0.35;
+  }
+}
+
+/* Confidence meter fill — the system's one signature transition (plan §4.3). */
+@keyframes meter-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Slow ambient drift on the paper grain texture — barely perceptible, just
+   enough that the surface reads as alive rather than a static PNG. */
+@keyframes grain-drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  50% {
+    transform: translate(-1.5%, 1.5%);
+  }
+}
+
+/* SignalCard mount — a more pronounced pop than entry-rise, reserved for
+   the one component that represents an actual model output landing. */
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+
+/* Verdict "rubber stamp" — the signal card's direction word lands like a
+   stamp on a research note: oversized and skewed, then thumps into place. */
+@keyframes stamp-in {
+  0% {
+    opacity: 0;
+    transform: scale(2.2) rotate(-9deg);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(0.94) rotate(1deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* The brief radial flash of ink behind the stamp at the moment of impact. */
+@keyframes ink-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+
+  35% {
+    opacity: 0.5;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+/* Left-to-right reveal for prose — a printing/ticker feel for answer text
+   and signal reasoning, in place of a plain fade. */
+@keyframes wipe-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* Classic terminal block cursor. */
+@keyframes cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Slow breathing glow — used sparingly (online status square only) so it
+   reads as "alive" rather than "loading". */
+@keyframes glow-breathe {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--glow-color, var(--bull)) 45%, transparent);
+  }
+
+  to {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--glow-color, var(--bull)) 0%, transparent);
+  }
+}
+
+/* ==========================================================================
+   Spotlight — a cursor-tracked radial highlight for a small set of
+   high-attention surfaces (SignalCard, landing prompt rows). The element
+   sets --mx/--my via a mousemove handler (see src/lib/useSpotlight.js);
+   absent that JS, --mx/--my default to center and the effect is inert.
+   ========================================================================== */
+.spotlight {
+  position: relative;
+  isolation: isolate;
+}
+
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease-out);
+  background: radial-gradient(
+    220px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--spotlight-color, var(--accent)) 14%, transparent),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.spotlight:hover::before,
+.spotlight:focus-within::before {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   Motion guard — global. Pending-state animations must additionally degrade
+   to a static text label under reduced motion; that per-component fallback
+   is implemented where each animation lives (see plan §2.6, §4.2).
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

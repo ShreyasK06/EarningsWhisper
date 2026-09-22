@@ -1,0 +1,120 @@
+/* ==========================================================================
+   App shell — the 3-column grid (plan §3.2) and its responsive collapse
+   (plan §3.3). Depends on tokens.css / base.css being imported first.
+   ========================================================================== */
+
+.shell {
+  display: grid;
+  grid-template-columns: var(--rail-w) minmax(0, 1fr) 0;
+  height: 100dvh; /* NOT 100vh — fixes the iOS Safari viewport-jump bug */
+  overflow: hidden;
+}
+
+/* Evidence column width change is instant/untransitioned — transitioning
+   grid tracks is janky. The panel's own content animates in instead
+   (implemented in evidence.css, owned by Task 7). */
+.shell[data-evidence="open"] {
+  grid-template-columns: var(--rail-w) minmax(0, 1fr) var(--drawer-w);
+}
+
+.shell__main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* The transcript/landing slot is always the second row of .shell__main.
+   Only constrain sizing here — never overflow — so the child (Transcript's
+   own <main>, or the landing wrapper below) keeps control of its own
+   scrolling per its own CSS. */
+.shell__main > :nth-child(2) {
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Wrapper App.jsx uses around <LandingPanel> when there are no entries yet,
+   so the #transcript skip-link target exists in both states even though
+   LandingPanel itself owns its inner max-width/padding (plan §4.5). */
+.shell__landing-slot {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--paper-0);
+}
+
+/* ---- contextbar: ticker · mode legend, above the transcript/landing slot --- */
+.shell__contextbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3) var(--s-5);
+  padding: var(--s-3) var(--s-6);
+  border-bottom: var(--border-hair);
+  background: var(--paper-0);
+  color: var(--ink-2);
+}
+
+.shell__contextbar-ticker {
+  color: var(--ink-1);
+}
+
+.shell__contextbar-legend {
+  display: flex;
+  gap: var(--s-4);
+}
+
+.shell__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: 2px var(--s-2);
+  border-radius: var(--r-1);
+}
+
+.shell__legend-item--lookup {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.shell__legend-item--signal {
+  color: var(--flat-ink);
+  background: color-mix(in srgb, var(--flat) 12%, transparent);
+}
+
+/* ==========================================================================
+   Responsive collapse (plan §3.3). Breakpoints are hard-coded px values —
+   custom properties cannot be used inside @media.
+   ========================================================================== */
+
+/* 900-1179px: rail stays a left column; the evidence panel renders inline
+   inside the clicked transcript row instead of occupying a grid column. */
+@media (max-width: 1179px) {
+  .shell,
+  .shell[data-evidence="open"] {
+    grid-template-columns: var(--rail-w) minmax(0, 1fr);
+  }
+}
+
+/* <900px: rail collapses to a sticky top bar (rail.css handles its own
+   internal layout); the shell becomes a single column stack. */
+@media (max-width: 899px) {
+  .shell,
+  .shell[data-evidence="open"] {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+
+  .shell__contextbar {
+    padding: var(--s-3) var(--s-4);
+  }
+}
+
+/* <640px: session stats live in the rail (rail.css); here just tighten the
+   contextbar so nothing forces horizontal scroll (forbidden at every width). */
+@media (max-width: 639px) {
+  .shell__contextbar-legend {
+    display: none;
+  }
+}

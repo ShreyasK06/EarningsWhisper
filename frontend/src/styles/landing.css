@@ -1,0 +1,291 @@
+/* ==========================================================================
+   LandingPanel — composed masthead shown before the first message.
+   Plan §4.5. Depends on tokens.css / base.css being imported first.
+   ========================================================================== */
+
+.landing {
+  max-width: 900px;
+  padding: var(--s-7) var(--s-6) var(--s-6);
+}
+
+/* the one directed load sequence in the app (plan §2.6, §4.5) */
+.landing__animate {
+  animation: rise var(--dur-4) var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+/* ---- dateline ---- */
+.landing__dateline {
+  color: var(--ink-2);
+  border-bottom: 1px solid var(--rule-strong);
+  padding-bottom: var(--s-2);
+  text-transform: uppercase;
+}
+
+/* ---- masthead ---- */
+.landing__masthead {
+  position: relative;
+  isolation: isolate; /* contain the glow's z-index:-1 to this element only */
+  margin-top: var(--s-6);
+}
+
+.landing__masthead::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -32px -40px auto -40px;
+  height: 220px;
+  background: radial-gradient(
+    420px circle at 18% 25%,
+    color-mix(in srgb, var(--accent) 10%, transparent),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.landing__ticker {
+  font-family: var(--font-display);
+  font-variation-settings: var(--fraunces-axes);
+  font-weight: 700;
+  font-size: clamp(2.5rem, 1.5rem + 4vw, 3.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  background: linear-gradient(100deg, var(--ink-0) 45%, var(--accent-hi));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.landing__company {
+  margin-top: var(--s-1);
+  font-weight: 500;
+  color: var(--ink-1);
+}
+
+/* ---- fact strip ---- */
+.landing__facts {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: var(--s-5);
+  margin-top: var(--s-6);
+  width: fit-content;
+}
+
+.landing__fact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding-left: var(--s-4);
+  border-left: var(--border-hair);
+}
+
+.landing__fact:first-child {
+  padding-left: 0;
+  border-left: none;
+}
+
+.landing__fact-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  color: var(--ink-2);
+  text-transform: uppercase;
+}
+
+.landing__fact-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.landing__fact-dot--accent {
+  background: var(--accent);
+}
+
+.landing__fact-dot--teal {
+  background: var(--tag-teal);
+}
+
+.landing__fact-dot--amber {
+  background: var(--tag-amber);
+}
+
+.landing__fact-value {
+  color: var(--ink-0);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.landing__cached-tag {
+  color: var(--warn);
+  border: 1px solid var(--warn);
+  background: var(--warn-wash);
+  padding: 0 var(--s-1);
+  border-radius: var(--r-1);
+  text-transform: uppercase;
+}
+
+/* ---- offline notice ---- */
+.landing__offline-notice {
+  margin-top: var(--s-6);
+  border: 1px solid var(--warn);
+  background: var(--warn-wash);
+  border-radius: var(--r-1);
+  padding: var(--s-4);
+  color: var(--ink-1);
+}
+
+.landing__offline-notice p {
+  max-width: var(--measure);
+}
+
+.landing__offline-notice code {
+  font-family: var(--font-mono);
+  background: var(--paper-2);
+  padding: 0 var(--s-1);
+  border-radius: var(--r-1);
+}
+
+.landing__retry {
+  margin-top: var(--s-3);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-1);
+  padding: var(--s-1) var(--s-3);
+  background: var(--paper-0);
+  transition: background-color var(--dur-1) var(--ease-out);
+}
+
+.landing__retry:hover {
+  background: var(--accent-wash);
+}
+
+/* ---- prompt groups ---- */
+.landing__prompts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-6);
+  margin-top: var(--s-6);
+}
+
+.landing__group-heading {
+  text-transform: uppercase;
+}
+
+.landing__group-heading--lookup {
+  color: var(--accent);
+}
+
+.landing__group-heading--directional {
+  color: var(--flat-ink);
+}
+
+.landing__group-sub {
+  margin-top: var(--s-1);
+  color: var(--ink-2);
+}
+
+.landing__rows {
+  margin-top: var(--s-3);
+}
+
+.landing__prompt-row {
+  --spotlight-color: var(--accent);
+
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-3) var(--s-3) calc(var(--s-3) + 2px);
+  width: 100%;
+  text-align: left;
+  border-top: var(--border-hair);
+  border-left: 2px solid transparent;
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    border-left-color var(--dur-2) var(--ease-out);
+}
+
+.landing__prompt-row--animate {
+  animation: rise var(--dur-4) var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+.landing__rows .landing__prompt-row:last-child {
+  border-bottom: var(--border-hair);
+}
+
+.landing__prompt-row:hover,
+.landing__prompt-row:focus-visible {
+  background: var(--paper-2);
+  border-left-color: var(--accent);
+}
+
+.landing__prompt-row--directional {
+  --spotlight-color: var(--flat);
+}
+
+.landing__prompt-row--directional:hover,
+.landing__prompt-row--directional:focus-visible {
+  border-left-color: var(--flat);
+}
+
+.landing__prompt-row[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.landing__prompt-row[aria-disabled="true"]:hover {
+  background: none;
+  border-left-color: transparent;
+}
+
+.landing__prompt-row[aria-disabled="true"].spotlight:hover::before {
+  opacity: 0;
+}
+
+.landing__prompt-caret {
+  font-family: var(--font-mono);
+  color: var(--ink-3);
+}
+
+.landing__prompt-text {
+  color: var(--ink-1);
+  min-width: 0;
+}
+
+.landing__prompt-trail {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.landing__prompt-tag {
+  color: var(--ink-3);
+  text-transform: uppercase;
+}
+
+.landing__prompt-arrow {
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-out);
+}
+
+.landing__prompt-row:hover .landing__prompt-arrow,
+.landing__prompt-row:focus-visible .landing__prompt-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ==========================================================================
+   Responsive — prompt groups sit side by side at >=900px.
+   ========================================================================== */
+@media (min-width: 900px) {
+  .landing__prompts {
+    grid-template-columns: 1fr 1fr;
+  }
+}

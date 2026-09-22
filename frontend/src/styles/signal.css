@@ -1,0 +1,287 @@
+/* ==========================================================================
+   SignalCard + ConfidenceMeter — plan §4.3.
+   Depends on tokens.css and base.css being imported first.
+   ========================================================================== */
+
+.signal-card {
+  --dir: var(--flat);
+  --dir-ink: var(--flat-ink);
+  --spotlight-color: var(--dir);
+
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--dir) 7%, var(--paper-1)),
+    var(--paper-1) 55%
+  );
+  border: var(--border);
+  border-left: 3px solid var(--dir);
+  border-radius: var(--r-0);
+  padding: var(--s-5);
+  animation: card-in var(--dur-4) var(--ease-spring) backwards;
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+  transition:
+    box-shadow var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-out);
+}
+
+.signal-card:hover {
+  box-shadow: 0 24px 56px -28px color-mix(in srgb, var(--dir) 55%, transparent);
+}
+
+.signal-card--bullish {
+  --dir: var(--bull);
+  --dir-ink: var(--bull-ink);
+}
+
+.signal-card--bearish {
+  --dir: var(--bear);
+  --dir-ink: var(--bear-ink);
+}
+
+.signal-card--neutral {
+  --dir: var(--flat);
+  --dir-ink: var(--flat-ink);
+}
+
+/* ---- header ---- */
+.signal-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: var(--border-hair);
+  padding-bottom: var(--s-3);
+  gap: var(--s-3);
+}
+
+.signal-card__header-left {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.signal-card__ticker {
+  font-weight: 600;
+  color: var(--ink-0);
+}
+
+.signal-card__hairline {
+  display: inline-block;
+  width: 1px;
+  height: 0.9em;
+  background: var(--rule);
+}
+
+.signal-card__kicker {
+  color: var(--ink-2);
+  text-transform: uppercase;
+}
+
+.signal-card__dateline {
+  color: var(--ink-3);
+  white-space: nowrap;
+  text-align: right;
+}
+
+/* ---- verdict row ---- */
+.signal-card__verdict {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin: var(--s-5) 0 var(--s-4);
+  gap: var(--s-4);
+}
+
+.signal-card__stamp {
+  position: relative;
+  display: inline-block;
+}
+
+.signal-card__stamp::before {
+  content: "";
+  position: absolute;
+  inset: -30% -20%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--dir) 55%, transparent), transparent 70%);
+  animation: ink-flash 700ms var(--ease-out) 120ms backwards;
+}
+
+.signal-card__verdict-word {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-variation-settings: var(--fraunces-axes);
+  font-weight: 700;
+  font-size: var(--t-display-size);
+  line-height: var(--t-display-lh);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.06em;
+  color: var(--dir-ink);
+  animation: stamp-in 650ms var(--ease-out) 80ms backwards;
+}
+
+.signal-card__confidence-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.signal-card__confidence-value {
+  color: var(--ink-0);
+}
+
+.signal-card__confidence-label {
+  color: var(--ink-2);
+  text-transform: uppercase;
+}
+
+@media (max-width: 639px) {
+  .signal-card__verdict {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s-2);
+  }
+
+  .signal-card__confidence-figure {
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+
+/* ---- reasoning ---- */
+.signal-card__reasoning {
+  max-width: var(--measure);
+  color: var(--ink-1);
+  font-size: var(--t-body-size);
+  line-height: var(--t-body-lh);
+}
+
+.signal-card__reasoning p {
+  text-wrap: pretty;
+  margin-block: var(--s-4);
+  animation: wipe-in var(--dur-4) var(--ease-out) backwards;
+}
+
+.signal-card__reasoning p:nth-child(1) {
+  animation-delay: 260ms;
+}
+
+.signal-card__reasoning p:nth-child(2) {
+  animation-delay: 340ms;
+}
+
+.signal-card__reasoning p:nth-child(3) {
+  animation-delay: 420ms;
+}
+
+.signal-card__reasoning p:first-child {
+  margin-top: 0;
+}
+
+.signal-card__reasoning p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---- supporting evidence ---- */
+.signal-card__evidence {
+  border-top: var(--border-hair);
+  padding-top: var(--s-4);
+  margin-top: var(--s-4);
+}
+
+.signal-card__evidence-label {
+  display: block;
+  color: var(--ink-2);
+  text-transform: uppercase;
+  margin-bottom: var(--s-2);
+}
+
+.signal-card__evidence-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.signal-card__evidence-empty {
+  color: var(--ink-2);
+}
+
+/* ---- footer ---- */
+.signal-card__footer {
+  margin-top: var(--s-4);
+  color: var(--ink-3);
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   ConfidenceMeter
+   ========================================================================== */
+
+.confidence-meter {
+  --dir: var(--flat);
+}
+
+.confidence-meter--bullish {
+  --dir: var(--bull);
+}
+
+.confidence-meter--bearish {
+  --dir: var(--bear);
+}
+
+.confidence-meter--neutral {
+  --dir: var(--flat);
+}
+
+.confidence-meter__track {
+  position: relative;
+  height: 4px;
+  background: var(--rule-hair);
+  width: 100%;
+  overflow: hidden;
+}
+
+.confidence-meter__ticks {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent calc(5% - 1px),
+    var(--paper-1) calc(5% - 1px),
+    var(--paper-1) 5%
+  );
+  pointer-events: none;
+}
+
+.confidence-meter__fill {
+  position: relative;
+  height: 100%;
+  width: calc(var(--conf) * 100%);
+  background: var(--dir);
+  transform-origin: left;
+  animation: meter-fill var(--dur-3) var(--ease-snap) backwards;
+}
+
+.confidence-meter__fill::after {
+  content: "";
+  position: absolute;
+  right: -3px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: var(--dir);
+  filter: blur(3px);
+  opacity: 0.85;
+}
+
+.confidence-meter__legend {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--s-1);
+  color: var(--ink-3);
+}

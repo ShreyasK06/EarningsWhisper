@@ -1,0 +1,153 @@
+/* ==========================================================================
+   Composer — plan §4.6. Depends on tokens.css and base.css.
+   ========================================================================== */
+
+.composer {
+  border-top: var(--border);
+  background: var(--paper-1);
+  padding: var(--s-4) var(--s-6);
+  padding-bottom: max(var(--s-4), env(safe-area-inset-bottom));
+}
+
+.composer__row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s-3);
+}
+
+.composer__field {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.composer__prefix {
+  position: absolute;
+  left: var(--s-3);
+  top: var(--s-3);
+  font-family: var(--font-mono);
+  color: var(--ink-3);
+  pointer-events: none;
+}
+
+.composer__cursor {
+  position: absolute;
+  left: calc(var(--s-3) + 0.8ch);
+  top: var(--s-3);
+  width: 0.55ch;
+  height: 1em;
+  background: var(--accent);
+  pointer-events: none;
+  animation: cursor-blink 1s steps(1) infinite;
+}
+
+.composer__textarea {
+  display: block;
+  width: 100%;
+  min-height: calc(1.4em + 2 * var(--s-3));
+  max-height: 9.5rem;
+  overflow-y: auto;
+  resize: none;
+  background: var(--paper-2);
+  border: var(--border);
+  border-radius: var(--r-1);
+  padding: var(--s-3) var(--s-4) var(--s-3) var(--s-6);
+  font-family: var(--font-body);
+  font-size: max(1rem, 16px);
+  line-height: var(--t-body-lh);
+  color: var(--ink-0);
+  transition:
+    box-shadow var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out);
+}
+
+.composer__textarea::placeholder {
+  color: var(--ink-3);
+}
+
+.composer__textarea:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-wash);
+}
+
+.composer__textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.composer__send {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(155deg, var(--accent-hi), var(--accent) 65%);
+  color: var(--paper-0);
+  border-radius: var(--r-1);
+  transition:
+    background-color var(--dur-1) var(--ease-out),
+    transform var(--dur-1) var(--ease-snap),
+    box-shadow var(--dur-1) var(--ease-out);
+}
+
+.composer__send:hover:not(:disabled) {
+  background: var(--accent-hi);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -10px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.composer__send:active:not(:disabled) {
+  background: var(--accent-lo);
+  transform: translateY(0) scale(0.97);
+}
+
+.composer__send:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.composer__send:focus-visible {
+  outline-color: var(--paper-0);
+}
+
+.composer__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-top: var(--s-2);
+}
+
+.composer__mode-chip {
+  display: inline-block;
+  padding: 1px var(--s-2);
+  border-radius: var(--r-1);
+  border: 1px solid var(--rule-hair);
+  color: var(--ink-2);
+  text-transform: uppercase;
+  transition:
+    opacity var(--dur-2) var(--ease-out),
+    color var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-snap);
+}
+
+.composer__mode-chip--signal {
+  color: var(--flat-ink);
+  border-color: var(--flat);
+  background: color-mix(in srgb, var(--flat) 7%, transparent);
+  transform: scale(1.04);
+}
+
+.composer__hint {
+  color: var(--ink-3);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+@media (max-width: 639px) {
+  .composer__hint {
+    display: none;
+  }
+}

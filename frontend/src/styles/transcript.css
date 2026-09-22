@@ -1,0 +1,412 @@
+/* ==========================================================================
+   Transcript — ruled research log. Replaces the bubble-chat ChatWindow.
+   See frontend-design-plan.md §4.2. Depends on tokens.css + base.css.
+   ========================================================================== */
+
+.transcript {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  padding: var(--s-6);
+  background: var(--paper-0);
+}
+
+.transcript__end {
+  block-size: 1px;
+}
+
+/* ---- shared entry skeleton ---- */
+
+.entry {
+  display: grid;
+  grid-template-columns: var(--entry-gutter) minmax(0, 1fr);
+  gap: var(--s-4);
+  padding: var(--s-5) 0;
+  border-top: var(--border-hair);
+  animation: entry-rise var(--dur-3) var(--ease-out) backwards;
+}
+
+.entry:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.entry__gutter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-1);
+  text-align: right;
+  align-self: start;
+  position: sticky;
+  top: var(--s-4);
+  color: var(--ink-2);
+}
+
+.entry__index {
+  color: var(--ink-2);
+}
+
+.entry__kind {
+  font-weight: 600;
+}
+
+.entry__kind--query {
+  color: var(--ink-2);
+}
+
+.entry__kind--lookup {
+  color: var(--accent);
+}
+
+.entry__kind--signal-bullish {
+  color: var(--bull);
+}
+
+.entry__kind--signal-bearish {
+  color: var(--bear);
+}
+
+.entry__kind--signal-neutral {
+  color: var(--flat);
+}
+
+.entry__kind--error {
+  color: var(--bear);
+}
+
+.entry__kind--working,
+.entry__kind--unknown {
+  color: var(--ink-2);
+}
+
+.entry__time {
+  color: var(--ink-3);
+}
+
+.entry__body {
+  min-width: 0;
+}
+
+@media (max-width: 899px) {
+  .entry {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .entry__gutter {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: flex-start;
+    text-align: left;
+    position: static;
+    gap: var(--s-3);
+    margin-bottom: var(--s-2);
+  }
+}
+
+/* ---- query entry (role: user) ---- */
+
+.entry__query {
+  max-width: var(--measure);
+  background: var(--paper-2);
+  border-left: 2px solid var(--rule-strong);
+  border-radius: var(--r-1);
+  padding: var(--s-3) var(--s-4);
+  color: var(--ink-0);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.entry__query::before {
+  content: "> ";
+  color: var(--ink-3);
+}
+
+/* ---- notice entry ---- */
+
+.entry--notice {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-4) 0;
+  border-top: none;
+}
+
+.entry--notice::before,
+.entry--notice::after {
+  content: "";
+  flex: 1;
+  border-top: var(--border-hair);
+}
+
+.entry__notice-text {
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+/* ---- unknown payload fallback ---- */
+
+.entry__unknown-label {
+  color: var(--ink-1);
+  margin-bottom: var(--s-2);
+}
+
+.entry__unknown-json {
+  background: var(--paper-2);
+  border: var(--border-hair);
+  border-radius: var(--r-1);
+  padding: var(--s-3);
+  color: var(--ink-1);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ==========================================================================
+   AnswerBody — prose + inline reference markers + Sources block.
+   ========================================================================== */
+
+.answer-body__paragraph {
+  max-width: var(--measure);
+  color: var(--ink-1);
+  text-wrap: pretty;
+  margin-bottom: var(--s-3);
+  animation: wipe-in var(--dur-4) var(--ease-out) backwards;
+}
+
+.answer-body__paragraph:nth-child(1) {
+  animation-delay: 60ms;
+}
+
+.answer-body__paragraph:nth-child(2) {
+  animation-delay: 140ms;
+}
+
+.answer-body__paragraph:nth-child(3) {
+  animation-delay: 220ms;
+}
+
+.answer-body__paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.ref {
+  font-family: var(--font-mono);
+  font-size: var(--t-micro-size);
+  letter-spacing: var(--t-micro-ws);
+  color: var(--accent);
+  vertical-align: super;
+  padding: 0 1px;
+  border-bottom: 1px dotted currentColor;
+  border-radius: 0;
+  transition: background-color var(--dur-1) var(--ease-out);
+}
+
+.ref:hover {
+  background: var(--accent-wash);
+}
+
+.answer-body__sources {
+  border-top: var(--border-hair);
+  padding-top: var(--s-3);
+  margin-top: var(--s-4);
+}
+
+.answer-body__sources-label {
+  color: var(--ink-2);
+  margin-bottom: var(--s-2);
+}
+
+.answer-body__sources-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+/* Each source is a column: the row itself, then (on narrow viewports, when
+   this chunk id is the currently-open evidence source) its own inline
+   EvidencePanel stacked directly beneath — see AnswerBody.jsx and plan
+   §3.3/§4.4. */
+.answer-body__source {
+  display: flex;
+  flex-direction: column;
+}
+
+.answer-body__source-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.answer-body__source .evidence-row {
+  flex: 1;
+  min-width: 0;
+}
+
+.answer-body__source--muted .evidence-row__index,
+.answer-body__source--muted .evidence-row__section,
+.answer-body__source--muted .evidence-row__chunk {
+  color: var(--ink-3);
+}
+
+.answer-body__tag {
+  flex-shrink: 0;
+  color: var(--ink-3);
+  border: 1px solid var(--rule-hair);
+  padding: 0 var(--s-1);
+  border-radius: var(--r-1);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   PendingEntry — differentiated by expected mode.
+   ========================================================================== */
+
+.pending__status {
+  color: var(--ink-2);
+  margin-bottom: var(--s-3);
+}
+
+.pending__timer {
+  color: var(--ink-2);
+  margin-top: var(--s-3);
+}
+
+.pending__reassurance {
+  color: var(--ink-2);
+  margin-top: var(--s-2);
+}
+
+.pending__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.pending__bar {
+  position: relative;
+  display: block;
+  height: 10px;
+  border-radius: var(--r-1);
+  background: var(--paper-2);
+  overflow: hidden;
+}
+
+.pending__bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(90deg, transparent, var(--paper-3), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 1.5s linear infinite;
+}
+
+.pending__checklist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.pending__step {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.pending__step-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: var(--bull);
+}
+
+.pending__step-marker--pending::before {
+  content: "\00b7";
+  color: var(--ink-3);
+}
+
+.pending__step-marker--active::before {
+  content: "";
+  display: block;
+  width: 5px;
+  height: 5px;
+  background: var(--accent);
+  animation: pulse 1.2s var(--ease-in-out) infinite alternate;
+}
+
+.pending__step-marker--done::before {
+  content: "\2713";
+  color: var(--bull);
+}
+
+.pending__step-label {
+  color: var(--ink-3);
+}
+
+.pending__step--active .pending__step-label {
+  color: var(--ink-0);
+}
+
+.pending__step--done .pending__step-label {
+  color: var(--ink-2);
+}
+
+/* ==========================================================================
+   FailureEntry
+   ========================================================================== */
+
+.failure {
+  border: 1px solid var(--bear);
+  border-left-width: 3px;
+  background: color-mix(in srgb, var(--bear) 6%, var(--paper-0));
+  padding: var(--s-4);
+  border-radius: var(--r-1);
+}
+
+.failure__heading {
+  font-weight: 600;
+  color: var(--bear-ink);
+  margin-bottom: var(--s-2);
+}
+
+.failure__body {
+  color: var(--ink-1);
+  margin-bottom: var(--s-3);
+}
+
+.failure__command-label {
+  color: var(--ink-2);
+  margin-bottom: var(--s-1);
+}
+
+.failure__command {
+  background: var(--paper-2);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-1);
+  color: var(--ink-1);
+  overflow-x: auto;
+  margin-bottom: var(--s-3);
+}
+
+.failure__retry {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  border: var(--border);
+  border-radius: var(--r-1);
+  padding: var(--s-2) var(--s-3);
+  color: var(--ink-0);
+  transition:
+    background-color var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out);
+}
+
+.failure__retry:hover {
+  background: var(--paper-2);
+  border-color: var(--rule-strong);
+}

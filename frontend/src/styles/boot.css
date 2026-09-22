@@ -1,0 +1,45 @@
+/* ==========================================================================
+   BootSequence — one-shot terminal intro on first load. Depends on
+   tokens.css / base.css being imported first.
+   ========================================================================== */
+
+.boot {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper-0);
+  transition:
+    opacity 320ms var(--ease-in-out),
+    clip-path 360ms var(--ease-in-out);
+}
+
+.boot--out {
+  opacity: 0;
+  clip-path: inset(0 0 100% 0);
+}
+
+.boot__lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.boot__line {
+  color: var(--ink-1);
+  opacity: 0;
+  animation: rise var(--dur-3) var(--ease-out) forwards;
+  animation-delay: calc(var(--i, 0) * 220ms + 80ms);
+}
+
+.boot__caret {
+  color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boot {
+    display: none;
+  }
+}
