@@ -13,11 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from anthropic import Anthropic
-
-import config
-
-MODEL = "claude-opus-5"
+from src.generation.llm_client import get_client
 
 JUDGE_SYSTEM = """You are grading whether an analyst's reasoning is supported by source excerpts.
 
@@ -38,14 +34,10 @@ def score_claims(claims: list[dict]) -> float:
 
 def judge(reasoning: str, chunks: list[dict]):
     excerpts = "\n\n".join(f"[{c['chunk_id']}] {c['text']}" for c in chunks)
-    client = Anthropic(api_key=config.ANTHROPIC_API_KEY)
-    response = client.messages.create(
-        model=MODEL,
-        max_tokens=1500,
-        system=JUDGE_SYSTEM,
-        messages=[{"role": "user", "content": f"EXCERPTS:\n{excerpts}\n\nREASONING:\n{reasoning}"}],
-    )
-    text = next(b.text for b in response.content if b.type == "text").strip()
+    client = get_client()
+    text = client.text_call(
+        JUDGE_SYSTEM, f"EXCERPTS:\n{excerpts}\n\nREASONING:\n{reasoning}"
+    ).strip()
     text = text.removeprefix("```json").removesuffix("```").strip()
     claims = json.loads(text)["claims"]
     return score_claims(claims), claims

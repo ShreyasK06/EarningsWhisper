@@ -17,7 +17,7 @@ from sec_edgar_downloader import Downloader
 
 import config
 
-DEFAULT_TICKERS = ["AAPL", "MSFT", "NVDA", "AMZN", "GOOGL"]
+DEFAULT_TICKERS = config.TICKERS
 DEFAULT_QUARTERS = 2
 
 # Not every 8-K is earnings-related (some are officer changes, other events,
