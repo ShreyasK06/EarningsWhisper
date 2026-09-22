@@ -74,7 +74,16 @@ def score(signals: list[dict]) -> pd.DataFrame:
             continue
         predicted_up = s["signal"] == "bullish"
         actual_up = r > 0
-        hit = (predicted_up == actual_up) if s["signal"] != "neutral" else None
+        # bool(...) is load-bearing: r > 0 yields numpy.bool_, and numpy.bool_
+        # addition is logical OR rather than integer addition. Left as
+        # numpy.bool_, the `hit` column (mixed with None for neutral signals,
+        # forcing object dtype) silently corrupts pandas' .mean() below --
+        # object-dtype .sum() reduces via Python's `+`, so N numpy.bool_
+        # values collapse via OR into a single True/False instead of a count,
+        # producing a hit rate near 1/N instead of the real fraction. Native
+        # Python bool addition is ordinary integer addition, so this avoids
+        # the collapse entirely.
+        hit = bool(predicted_up == actual_up) if s["signal"] != "neutral" else None
         rows.append({**s, "return": r, "hit": hit})
 
     df = pd.DataFrame(rows)

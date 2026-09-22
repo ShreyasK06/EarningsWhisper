@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -107,3 +108,42 @@ def test_score_computes_hit_rate_and_treats_neutral_as_non_directional(monkeypat
     directional = df[df["hit"].notna()]
     assert len(directional) == 2  # neutral is excluded from hit-rate scoring
     assert directional["hit"].tolist() == [True, False]
+
+
+def test_score_hit_rate_is_correct_with_real_numpy_returns_and_neutrals(monkeypatch, capsys):
+    # forward_return's real implementation returns numpy.float64 (from a
+    # pandas Series division), which makes `r > 0` a numpy.bool_ rather than
+    # a Python bool. numpy.bool_ addition is logical OR, not arithmetic sum --
+    # mixed with None for neutral signals (forcing the `hit` column to object
+    # dtype), a naive pandas.Series.mean() silently collapses N numpy.bool_
+    # values into a single True/False before dividing, instead of counting.
+    # This regression-tests that score() avoids that collapse. 3 hits, 1 miss,
+    # 1 neutral -> correct hit rate is 3/4 = 75%, not 1/4 = 25% (what the
+    # object-dtype-mean bug would silently report instead).
+    returns = {
+        "A": np.float64(0.05),
+        "B": np.float64(-0.02),
+        "C": np.float64(0.01),
+        "D": np.float64(-0.03),
+        "E": np.float64(0.02),
+    }
+
+    def fake_forward_return(ticker, filed_datetime, horizon=1):
+        return returns[ticker]
+
+    monkeypatch.setattr(score_mod, "forward_return", fake_forward_return)
+
+    signals = [
+        {"ticker": "A", "filed_datetime": "2026-05-01T20:15:00", "signal": "bullish", "confidence": 0.8},
+        {"ticker": "B", "filed_datetime": "2026-05-01T20:15:00", "signal": "bearish", "confidence": 0.8},
+        {"ticker": "C", "filed_datetime": "2026-05-01T20:15:00", "signal": "bullish", "confidence": 0.8},
+        {"ticker": "D", "filed_datetime": "2026-05-01T20:15:00", "signal": "bullish", "confidence": 0.8},
+        {"ticker": "E", "filed_datetime": "2026-05-01T20:15:00", "signal": "neutral", "confidence": 0.4},
+    ]
+
+    df = score_mod.score(signals)
+    directional = df[df["hit"].notna()]
+
+    assert isinstance(directional["hit"].iloc[0], bool)  # native Python bool, not numpy.bool_
+    assert directional["hit"].mean() == pytest.approx(0.75)
+    assert "hit rate: 75.00%" in capsys.readouterr().out
