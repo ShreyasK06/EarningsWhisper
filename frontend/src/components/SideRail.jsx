@@ -22,9 +22,13 @@ export default function SideRail({
   status,
   onRetryConnect,
   tickersAreCached,
+  user,
+  onSignIn,
+  onSignOut,
 }) {
   const { theme, toggleTheme, accent, setAccent } = useTheme();
   const [accentPickerOpen, setAccentPickerOpen] = useState(false);
+  const [authMenuOpen, setAuthMenuOpen] = useState(false);
 
   return (
     <aside className="rail" aria-label="Coverage and appearance">
@@ -72,6 +76,52 @@ export default function SideRail({
             )}
           </div>
         </div>
+      </div>
+
+      <div className="rail__auth">
+        {user ? (
+          <div className="rail__auth-user">
+            <button
+              type="button"
+              className="rail__auth-avatar-btn"
+              aria-expanded={authMenuOpen}
+              aria-label={`Signed in as ${user.displayName ?? user.email ?? "user"} — account menu`}
+              onClick={() => setAuthMenuOpen((prev) => !prev)}
+            >
+              {user.photoURL ? (
+                <img
+                  className="rail__auth-avatar"
+                  src={user.photoURL}
+                  alt=""
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <span className="rail__auth-avatar rail__auth-avatar--fallback" aria-hidden="true">
+                  {(user.displayName ?? user.email ?? "?").charAt(0).toUpperCase()}
+                </span>
+              )}
+              <span className="rail__auth-name t-micro">
+                {user.displayName ?? user.email ?? "Signed in"}
+              </span>
+            </button>
+            {authMenuOpen && (
+              <button
+                type="button"
+                className="rail__auth-signout t-micro"
+                onClick={() => {
+                  onSignOut?.();
+                  setAuthMenuOpen(false);
+                }}
+              >
+                Sign out
+              </button>
+            )}
+          </div>
+        ) : (
+          <button type="button" className="rail__auth-signin t-micro" onClick={onSignIn}>
+            Sign in with Google
+          </button>
+        )}
       </div>
 
       <div className="rail__section rail__section--coverage">

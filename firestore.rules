@@ -1,0 +1,16 @@
+// Firestore security rules for EarningsWhisper chat persistence.
+// See docs/superpowers/specs/2026-09-22-firebase-chat-persistence-design.md.
+//
+// This repo has no `firebase.json` / Firebase CLI project wired up, so
+// these rules aren't auto-deployed. Publish them either by pasting this
+// file's contents into Firebase Console > Firestore Database > Rules, or
+// via `firebase deploy --only firestore:rules` if you've run
+// `firebase init` and authenticated the CLI yourself.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/chats/{ticker}/messages/{messageId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

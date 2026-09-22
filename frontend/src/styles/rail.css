@@ -7,7 +7,7 @@
   background: var(--paper-1);
   border-right: var(--border);
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto 1fr auto;
   padding: var(--s-5) var(--s-4) var(--s-4);
   min-height: 0;
   overflow-y: auto;
@@ -104,6 +104,95 @@
 .rail__accent-swatch:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* ---- auth (sign-in / account) ---- */
+.rail__auth {
+  padding: var(--s-3) 0;
+  border-bottom: var(--border-hair);
+}
+
+.rail__auth-signin {
+  display: block;
+  width: 100%;
+  padding: var(--s-2) var(--s-3);
+  color: var(--ink-1);
+  background: var(--paper-2);
+  border: var(--border-hair);
+  border-radius: var(--r-1);
+  cursor: pointer;
+  text-align: center;
+  transition:
+    color var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out);
+}
+
+.rail__auth-signin:hover {
+  color: var(--ink-0);
+  border-color: var(--rule);
+}
+
+.rail__auth-user {
+  position: relative;
+}
+
+.rail__auth-avatar-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  width: 100%;
+  padding: var(--s-1);
+  background: transparent;
+  border: none;
+  border-radius: var(--r-1);
+  cursor: pointer;
+  text-align: left;
+}
+
+.rail__auth-avatar-btn:hover {
+  background: var(--paper-2);
+}
+
+.rail__auth-avatar {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.rail__auth-avatar--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-wash);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.rail__auth-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-1);
+}
+
+.rail__auth-signout {
+  display: block;
+  width: 100%;
+  margin-top: var(--s-1);
+  padding: var(--s-1) var(--s-2);
+  color: var(--ink-2);
+  background: transparent;
+  border: var(--border-hair);
+  border-radius: var(--r-1);
+  cursor: pointer;
+  text-align: left;
+}
+
+.rail__auth-signout:hover {
+  color: var(--ink-0);
+  border-color: var(--rule);
 }
 
 /* ---- shared section label row ---- */
@@ -323,7 +412,8 @@
     white-space: nowrap;
   }
 
-  .rail__appearance {
+  .rail__appearance,
+  .rail__auth {
     display: none;
   }
 

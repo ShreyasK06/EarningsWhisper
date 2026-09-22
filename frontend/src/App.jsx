@@ -18,6 +18,8 @@ import { ApiError, fetchTickers, sendMessage } from "./api";
 import { predictMode } from "./lib/mode";
 import { companyName } from "./lib/format";
 import { useMediaQuery } from "./lib/useMediaQuery";
+import { useAuth } from "./lib/useAuth";
+import { loadChatHistory, saveMessage } from "./lib/chatHistory";
 
 // The plan's >=1180px "wide" tier (§3.3) is also the point at which the
 // evidence panel switches from a single drawer instance (AppShell's third
@@ -57,8 +59,10 @@ export default function App() {
   const [announce, setAnnounce] = useState("");
   const [booted, setBooted] = useState(false);
   const isWideViewport = useMediaQuery(WIDE_VIEWPORT_QUERY);
+  const { user, signInWithGoogle, signOut } = useAuth();
 
   const lastFocusedRef = useRef(null);
+  const prevUidRef = useRef(null);
 
   const loadTickers = useCallback((isRetry) => {
     setStatus((prev) => (isRetry ? "connecting" : prev));
@@ -90,22 +94,56 @@ export default function App() {
     loadTickers(true);
   }, [loadTickers]);
 
-  const handleTickerChange = useCallback((next) => {
-    setTicker(next);
-    setSessionId(null);
-    setEntries((prev) =>
-      prev.length > 0
-        ? [
-            {
-              id: crypto.randomUUID(),
-              role: "notice",
-              at: Date.now(),
-              message: `session reset · now covering ${next}`,
-            },
-          ]
-        : [],
-    );
-  }, []);
+  const handleTickerChange = useCallback(
+    (next) => {
+      setTicker(next);
+      setSessionId(null);
+      if (user) {
+        // Signed in: the effect below loads this ticker's real saved
+        // history — skip the anonymous "session reset" placeholder so it
+        // isn't briefly shown before the real history arrives.
+        return;
+      }
+      setEntries((prev) =>
+        prev.length > 0
+          ? [
+              {
+                id: crypto.randomUUID(),
+                role: "notice",
+                at: Date.now(),
+                message: `session reset · now covering ${next}`,
+              },
+            ]
+          : [],
+      );
+    },
+    [user],
+  );
+
+  // Signed-in: load the active ticker's saved history whenever the user or
+  // the ticker changes (covers sign-in, ticker switch while signed in, and
+  // the initial load once both are known). Signed-out: clear the transcript
+  // only on an actual sign-OUT transition (prevUidRef was set), never on
+  // first load while anonymous — that would wipe a conversation someone is
+  // mid-way through typing before they ever touch the login button.
+  useEffect(() => {
+    const prevUid = prevUidRef.current;
+    const uid = user?.uid ?? null;
+    prevUidRef.current = uid;
+
+    if (uid) {
+      if (!ticker) return undefined;
+      let cancelled = false;
+      loadChatHistory(uid, ticker).then((history) => {
+        if (!cancelled) setEntries(history);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+    if (prevUid) setEntries([]);
+    return undefined;
+  }, [user, ticker]);
 
   const handleSend = useCallback(
     (rawText) => {
@@ -136,14 +174,15 @@ export default function App() {
         .then((reply) => {
           setSessionId(reply?.session_id ?? null);
           setStatus("online");
+          const assistantEntry = { id: pendingId, role: "assistant", at: Date.now(), payload: reply };
           setEntries((prev) =>
-            prev.map((entry) =>
-              entry.id === pendingId
-                ? { id: pendingId, role: "assistant", at: Date.now(), payload: reply }
-                : entry,
-            ),
+            prev.map((entry) => (entry.id === pendingId ? assistantEntry : entry)),
           );
           setAnnounce(summarizeReply(reply));
+          if (user) {
+            saveMessage(user.uid, ticker, userEntry);
+            saveMessage(user.uid, ticker, assistantEntry);
+          }
         })
         .catch((err) => {
           const isApiError = err instanceof ApiError;
@@ -163,7 +202,7 @@ export default function App() {
           setPending(false);
         });
     },
-    [ticker, pending, sessionId],
+    [ticker, pending, sessionId, user],
   );
 
   const handleRetry = useCallback(
@@ -212,6 +251,9 @@ export default function App() {
             status={status}
             onRetryConnect={retryConnect}
             tickersAreCached={tickersAreCached}
+            user={user}
+            onSignIn={signInWithGoogle}
+            onSignOut={signOut}
           />
         }
         contextBar={
