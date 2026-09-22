@@ -9,4 +9,5 @@ venv/
 *.egg-info/
 .pytest_cache/
 src/eval/metrics.db
+data/golden/candidates.jsonl
 .claude-flow/
