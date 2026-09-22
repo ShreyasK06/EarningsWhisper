@@ -58,6 +58,21 @@ HEADER_PATTERNS = [
     (r"^about (apple|microsoft|nvidia|amazon|alphabet|google)", "About", False),
     (r"^press contact", "Contacts", False),
     (r"^investor relations contact", "Contacts", False),
+    # JPM ("JPMorganChase Reports ... Results") uses its own all-caps
+    # section headers instead of the generic "Business Outlook"/
+    # "Segment Information" phrasing above.
+    (r"^significant items in \d[a-z]\d{2} results", "BusinessOutlook", False),
+    (r"^capital distributions$", "BusinessOutlook", False),
+    (r"^firmwide metrics$", "FinancialTables", True),
+    (r"^discussion of results:?$", "FinancialTables", True),
+    (r"^(consumer & community banking|commercial & investment bank|asset & wealth management)\s*\([a-z]+\)$", "FinancialTables", True),
+    # XOM ("Announces ... Results") likewise uses its own headers for
+    # the segment/cash-flow tables and safe-harbor boilerplate.
+    (r"^results summary$", "FinancialTables", True),
+    (r"^additional highlights$", "BusinessOutlook", False),
+    (r"^earnings and volume summary by segment", "FinancialTables", True),
+    (r"^(cash flow from operations|free cash flow|cash capital expenditures|calculation of structural cost savings|adjusting items)", "FinancialTables", True),
+    (r"^cautionary statement", "ForwardLooking", False),
 ]
 COMPILED_HEADERS = [(re.compile(p, re.IGNORECASE), label, is_table) for p, label, is_table in HEADER_PATTERNS]
 
