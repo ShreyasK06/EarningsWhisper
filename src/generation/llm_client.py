@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 
 MAX_RETRIES = 4
 RETRY_BACKOFF_SECONDS = 2
+REQUEST_TIMEOUT_MS = 60_000
 
 
 class LLMClient(ABC):
@@ -57,14 +58,22 @@ class GeminiClient(LLMClient):
 
     def __init__(self, model=None, api_key=None):
         from google import genai
+        from google.genai import types
         from config import GEMINI_API_KEY, GEMINI_MODEL
 
-        self.client = genai.Client(api_key=api_key or GEMINI_API_KEY)
+        self.client = genai.Client(
+            api_key=api_key or GEMINI_API_KEY,
+            http_options=types.HttpOptions(timeout=REQUEST_TIMEOUT_MS),
+        )
         self.model_name = model or GEMINI_MODEL
 
     def _generate_with_retry(self, contents, config):
-        """Retry on transient server errors (e.g. 503 model-overloaded);
-        propagate client errors (e.g. bad request, auth) immediately."""
+        """Retry on transient server errors (e.g. 503 model-overloaded) and
+        request timeouts (a stalled socket never errors on its own without
+        REQUEST_TIMEOUT_MS -- see the http_options set in __init__);
+        propagate client errors (e.g. bad request, auth, quota) immediately,
+        since retrying those wastes quota for no benefit."""
+        import httpx
         from google.genai import errors
 
         for attempt in range(MAX_RETRIES + 1):
@@ -72,7 +81,7 @@ class GeminiClient(LLMClient):
                 return self.client.models.generate_content(
                     model=self.model_name, contents=contents, config=config
                 )
-            except errors.ServerError:
+            except (errors.ServerError, httpx.TimeoutException):
                 if attempt == MAX_RETRIES:
                     raise
                 time.sleep(RETRY_BACKOFF_SECONDS * (2**attempt))

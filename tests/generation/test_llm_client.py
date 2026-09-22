@@ -69,3 +69,15 @@ def test_text_call_does_not_retry_client_error(monkeypatch):
         client.text_call("system", "user")
 
     assert client.client.models.calls == 1
+
+
+def test_text_call_retries_on_timeout_then_succeeds(monkeypatch):
+    import httpx
+
+    timeout = httpx.ConnectTimeout("timed out")
+    client = _make_client(monkeypatch, [timeout, _FakeResponse("ok")])
+
+    result = client.text_call("system", "user")
+
+    assert result == "ok"
+    assert client.client.models.calls == 2
