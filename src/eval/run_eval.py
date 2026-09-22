@@ -71,15 +71,40 @@ def evaluate(search_fn=dense_search, k: int = TOP_K, config_hash: str = "dense-b
         run_id=run_id,
         timestamp=datetime.now(timezone.utc).isoformat(),
         config_hash=config_hash,
-        recall_at_5=metrics["recall_at_5"],
-        precision_at_5=metrics["precision_at_5"],
+        recall_at_5=metrics["recall_at_5"] if k == 5 else None,
+        precision_at_5=metrics["precision_at_5"] if k == 5 else None,
         mrr=metrics["mrr"],
-        ndcg_at_5=metrics["ndcg_at_5"],
+        ndcg_at_5=metrics["ndcg_at_5"] if k == 5 else None,
         faithfulness=None,
         notes=notes,
+        k=k,
+        recall_at_k=metrics["recall_at_5"],
+        precision_at_k=metrics["precision_at_5"],
+        ndcg_at_k=metrics["ndcg_at_5"],
     )
     print(f"\nRecorded run '{run_id}' to src/eval/metrics.db")
     return metrics
+
+
+def sweep(search_fns: dict, k_values: list[int] = None, config_hash_prefix: str = "",
+          cases: list[dict] | None = None) -> dict:
+    """Run evaluate() for every (config_name, k) pair in search_fns x k_values.
+
+    search_fns: {"dense": dense_search, "hybrid": hybrid_search, "reranked": reranked_search}
+    Returns {(config_name, k): metrics_dict}.
+    """
+    k_values = k_values if k_values is not None else [1, 3, 5, 10]
+    cases = cases if cases is not None else load_eval_set()
+
+    results = {}
+    for name, search_fn in search_fns.items():
+        for k in k_values:
+            config_hash = f"{config_hash_prefix}{name}-k{k}" if config_hash_prefix else f"{name}-k{k}"
+            print(f"\n=== {name} @ k={k} ===")
+            metrics = evaluate(search_fn, k=k, config_hash=config_hash,
+                                notes=f"sweep: {name} at k={k}", cases=cases)
+            results[(name, k)] = metrics
+    return results
 
 
 if __name__ == "__main__":

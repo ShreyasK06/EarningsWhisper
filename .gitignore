@@ -1,4 +1,5 @@
 data/raw/
+data/analysis/
 qdrant_data/
 __pycache__/
 *.pyc
