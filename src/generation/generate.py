@@ -15,7 +15,7 @@ from pydantic import ValidationError
 from src.generation.llm_client import get_client
 from src.generation.prompts import SYSTEM, build_user_prompt
 from src.generation.schema import Signal
-from src.retrieval.hybrid import hybrid_search
+from src.retrieval.rerank import reranked_search
 
 CONTEXT_QUERIES = [
     "outlook and guidance for coming quarters",
@@ -29,7 +29,7 @@ def gather_context(ticker: str, fiscal_quarter: str | None = None, k_each: int =
     seen: set[str] = set()
     context: list[dict] = []
     for query in CONTEXT_QUERIES:
-        for hit in hybrid_search(query, k=k_each, ticker=ticker, fiscal_quarter=fiscal_quarter):
+        for hit in reranked_search(query, k=k_each, ticker=ticker, fiscal_quarter=fiscal_quarter):
             if hit["chunk_id"] not in seen:
                 seen.add(hit["chunk_id"])
                 context.append(hit)

@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from config import TICKERS
 from src.generation.generate import generate_signal
 from src.generation.llm_client import get_client
-from src.retrieval.dense import dense_search
+from src.retrieval.rerank import reranked_search
 
 app = FastAPI()
 app.add_middleware(
@@ -77,7 +77,7 @@ def chat(req: ChatRequest):
             "signal": signal.model_dump(),
         }
     else:
-        hits = dense_search(req.message, k=5, ticker=req.ticker)
+        hits = reranked_search(req.message, k=5, ticker=req.ticker)
         context = "\n\n".join(f"[{h['chunk_id']}] {h['text']}" for h in hits)
         answer = client.text_call(
             "Answer the question using ONLY the excerpts. Cite chunk_ids you used in brackets. "
