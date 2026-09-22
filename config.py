@@ -14,7 +14,12 @@ LLM_BACKEND = os.environ.get("LLM_BACKEND", "gemini")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite")
 
-TICKERS = ["AAPL", "MSFT", "NVDA", "AMZN", "GOOGL"]
+TICKERS = [
+    "AAPL", "MSFT", "NVDA", "AMZN", "GOOGL",
+    "META", "TSLA", "JPM", "V", "UNH",
+    "XOM", "WMT", "HD", "PG", "KO",
+    "DIS", "NFLX", "CRM", "ORCL", "AVGO",
+]
 
 # Qdrant: local on-disk mode by default (no server needed). Set QDRANT_HOST
 # to point at a real Qdrant server instead (e.g. once Docker is available).
