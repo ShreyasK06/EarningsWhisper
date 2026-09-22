@@ -100,6 +100,9 @@ def analyze():
             print(f"{label}: no questions in this group")
             continue
         print(f"{label} (n={len(group)}):")
+        if len(group) < 3:
+            print(f"  n={len(group)} is too small for a mean to mean anything -- not printing one.")
+            continue
         for name, _ in CONFIGS:
             print(f"  mean recall_{name}: {mean(r[f'recall_{name}'] for r in group):.3f}")
 

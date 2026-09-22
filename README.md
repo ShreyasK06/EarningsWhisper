@@ -134,7 +134,12 @@ pip install --upgrade pip
 pip install -r requirements.txt
 cp .env.example .env            # fill in GEMINI_API_KEY, SEC_EDGAR_COMPANY_NAME/EMAIL
 
+# small starter corpus (5 tickers x 2 quarters):
 python scripts/ingest_all.py --tickers AAPL MSFT NVDA AMZN GOOGL --quarters 2
+# the full corpus behind the Results numbers above (20 tickers x 4 quarters,
+# config.TICKERS already lists all 20, so --quarters is the only flag needed):
+python scripts/ingest_all.py --quarters 4
+
 python scripts/evaluate.py
 python scripts/eval_sweep.py
 
