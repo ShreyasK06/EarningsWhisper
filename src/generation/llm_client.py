@@ -5,7 +5,11 @@ router/Q&A) all go through here instead of hitting a provider SDK directly,
 so swapping providers is a one-line config change (`LLM_BACKEND`).
 """
 import json
+import time
 from abc import ABC, abstractmethod
+
+MAX_RETRIES = 4
+RETRY_BACKOFF_SECONDS = 2
 
 
 class LLMClient(ABC):
@@ -58,13 +62,27 @@ class GeminiClient(LLMClient):
         self.client = genai.Client(api_key=api_key or GEMINI_API_KEY)
         self.model_name = model or GEMINI_MODEL
 
+    def _generate_with_retry(self, contents, config):
+        """Retry on transient server errors (e.g. 503 model-overloaded);
+        propagate client errors (e.g. bad request, auth) immediately."""
+        from google.genai import errors
+
+        for attempt in range(MAX_RETRIES + 1):
+            try:
+                return self.client.models.generate_content(
+                    model=self.model_name, contents=contents, config=config
+                )
+            except errors.ServerError:
+                if attempt == MAX_RETRIES:
+                    raise
+                time.sleep(RETRY_BACKOFF_SECONDS * (2**attempt))
+
     def structured_call(self, system, user, schema):
         from google.genai import types
 
-        response = self.client.models.generate_content(
-            model=self.model_name,
-            contents=user,
-            config=types.GenerateContentConfig(
+        response = self._generate_with_retry(
+            user,
+            types.GenerateContentConfig(
                 system_instruction=system,
                 response_mime_type="application/json",
                 response_schema=flatten_schema(schema),
@@ -75,10 +93,8 @@ class GeminiClient(LLMClient):
     def text_call(self, system, user):
         from google.genai import types
 
-        response = self.client.models.generate_content(
-            model=self.model_name,
-            contents=user,
-            config=types.GenerateContentConfig(system_instruction=system),
+        response = self._generate_with_retry(
+            user, types.GenerateContentConfig(system_instruction=system)
         )
         return response.text
 

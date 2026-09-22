@@ -12,7 +12,7 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
 LLM_BACKEND = os.environ.get("LLM_BACKEND", "gemini")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite")
 
 TICKERS = ["AAPL", "MSFT", "NVDA", "AMZN", "GOOGL"]
 
