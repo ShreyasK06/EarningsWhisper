@@ -1,11 +1,13 @@
-// Left instrument rail: coverage, live session stats, backend status.
+// Left instrument rail: coverage, appearance controls, backend status.
 // Replaces the old <select> ticker control (plan §4.1) — every ticker is
 // now a real, accessibly-named <button>. Carries only data that is real:
 // there is no persistence backend, so no fabricated "recent signals" or
 // session history ever appears here (plan §3.1).
 
+import { useState } from "react";
 import { companyName } from "../lib/format.js";
-import { useCountUp } from "../lib/useCountUp.js";
+import { ACCENTS, useTheme } from "../lib/useTheme.js";
+import Icon from "./Icon.jsx";
 
 const STATUS_COPY = {
   online: "API ONLINE",
@@ -18,21 +20,58 @@ export default function SideRail({
   activeTicker,
   onSelectTicker,
   status,
-  sessionId,
-  stats,
   onRetryConnect,
   tickersAreCached,
 }) {
-  const shortId = sessionId ? sessionId.slice(0, 8) : "—";
-  const entriesDisplay = useCountUp(stats.entries, { duration: 500 });
-  const lookupsDisplay = useCountUp(stats.lookups, { duration: 500 });
-  const signalsDisplay = useCountUp(stats.signals, { duration: 500 });
+  const { theme, toggleTheme, accent, setAccent } = useTheme();
+  const [accentPickerOpen, setAccentPickerOpen] = useState(false);
 
   return (
-    <aside className="rail" aria-label="Coverage and session">
+    <aside className="rail" aria-label="Coverage and appearance">
       <div className="rail__wordmark">
         <div className="rail__brand t-h2">Earnings Whisper</div>
-        <div className="rail__tag t-micro">RESEARCH TERMINAL · V0.3</div>
+        <div className="rail__appearance">
+          <button
+            type="button"
+            className="rail__appearance-btn"
+            aria-pressed={theme === "dark"}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            onClick={toggleTheme}
+          >
+            <Icon name={theme === "dark" ? "sun" : "moon"} size={14} />
+          </button>
+          <div className="rail__accent-picker">
+            <button
+              type="button"
+              className="rail__appearance-btn"
+              aria-expanded={accentPickerOpen}
+              aria-label="Change accent color"
+              onClick={() => setAccentPickerOpen((prev) => !prev)}
+            >
+              <Icon name="palette" size={14} />
+            </button>
+            {accentPickerOpen && (
+              <div className="rail__accent-swatches" role="radiogroup" aria-label="Accent color">
+                {ACCENTS.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={accent === option.id}
+                    aria-label={option.label}
+                    className="rail__accent-swatch"
+                    data-selected={accent === option.id || undefined}
+                    style={{ "--swatch": option.swatch }}
+                    onClick={() => {
+                      setAccent(option.id);
+                      setAccentPickerOpen(false);
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="rail__section rail__section--coverage">
@@ -59,28 +98,6 @@ export default function SideRail({
               </button>
             );
           })}
-        </div>
-      </div>
-
-      <div className="rail__section rail__section--session">
-        <span className="rail__label t-meta">SESSION</span>
-        <div className="rail__stats">
-          <div className="rail__stat-row">
-            <span className="rail__stat-label t-micro">ID</span>
-            <span className="rail__stat-value t-data">{shortId}</span>
-          </div>
-          <div className="rail__stat-row">
-            <span className="rail__stat-label t-micro">ENTRIES</span>
-            <span className="rail__stat-value t-data">{entriesDisplay}</span>
-          </div>
-          <div className="rail__stat-row">
-            <span className="rail__stat-label t-micro">LOOKUPS</span>
-            <span className="rail__stat-value t-data">{lookupsDisplay}</span>
-          </div>
-          <div className="rail__stat-row">
-            <span className="rail__stat-label t-micro">SIGNALS</span>
-            <span className="rail__stat-value t-data">{signalsDisplay}</span>
-          </div>
         </div>
       </div>
 

@@ -17,7 +17,6 @@
   border-left: 3px solid var(--dir);
   border-radius: var(--r-0);
   padding: var(--s-5);
-  animation: card-in var(--dur-4) var(--ease-spring) backwards;
   transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
   transform-style: preserve-3d;
   transition:
@@ -105,7 +104,6 @@
   z-index: -1;
   border-radius: 50%;
   background: radial-gradient(circle, color-mix(in srgb, var(--dir) 55%, transparent), transparent 70%);
-  animation: ink-flash 700ms var(--ease-out) 120ms backwards;
 }
 
 .signal-card__verdict-word {
@@ -118,7 +116,6 @@
   font-variant-caps: all-small-caps;
   letter-spacing: 0.06em;
   color: var(--dir-ink);
-  animation: stamp-in 650ms var(--ease-out) 80ms backwards;
 }
 
 .signal-card__confidence-figure {
@@ -161,19 +158,6 @@
 .signal-card__reasoning p {
   text-wrap: pretty;
   margin-block: var(--s-4);
-  animation: wipe-in var(--dur-4) var(--ease-out) backwards;
-}
-
-.signal-card__reasoning p:nth-child(1) {
-  animation-delay: 260ms;
-}
-
-.signal-card__reasoning p:nth-child(2) {
-  animation-delay: 340ms;
-}
-
-.signal-card__reasoning p:nth-child(3) {
-  animation-delay: 420ms;
 }
 
 .signal-card__reasoning p:first-child {
@@ -262,7 +246,6 @@
   width: calc(var(--conf) * 100%);
   background: var(--dir);
   transform-origin: left;
-  animation: meter-fill var(--dur-3) var(--ease-snap) backwards;
 }
 
 .confidence-meter__fill::after {

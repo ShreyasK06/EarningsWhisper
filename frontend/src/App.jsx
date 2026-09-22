@@ -5,7 +5,7 @@
 // evidence panel. Every /chat and /tickers call goes through the hardened
 // client in ./api — request/response shapes pass through untouched
 // (plan §7.1/§7.2): this file never adds, renames, or reshapes a field.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import AppShell from "./components/AppShell";
 import BootSequence from "./components/BootSequence";
 import SideRail from "./components/SideRail";
@@ -196,17 +196,6 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [evidence, closeEvidence]);
 
-  const stats = useMemo(() => {
-    let lookups = 0;
-    let signals = 0;
-    for (const entry of entries) {
-      if (entry.role !== "assistant") continue;
-      if (entry.payload?.type === "answer") lookups += 1;
-      else if (entry.payload?.type === "signal") signals += 1;
-    }
-    return { entries: entries.length, lookups, signals };
-  }, [entries]);
-
   return (
     <>
       {!booted && <BootSequence onDone={() => setBooted(true)} />}
@@ -221,8 +210,6 @@ export default function App() {
             activeTicker={ticker}
             onSelectTicker={handleTickerChange}
             status={status}
-            sessionId={sessionId}
-            stats={stats}
             onRetryConnect={retryConnect}
             tickersAreCached={tickersAreCached}
           />

@@ -30,11 +30,14 @@
   --flat: #7a6f5c; /* the *neutral signal*. distinct from --ink-2. */
   --flat-ink: #5c5344;
 
-  /* ---- the single brand accent ---- */
+  /* ---- the brand accent — 5 curated presets, swapped via [data-accent]
+         on <html> (see useTheme.js). "navy" is the default and lives here
+         in :root; --accent-wash derives from whichever accent + paper are
+         active via color-mix, so presets only need to set 3 values each. ---- */
   --accent: #1d3557; /* ledger navy */
   --accent-hi: #24406b; /* hover */
   --accent-lo: #16283f; /* active / pressed */
-  --accent-wash: #e8ecf2; /* tinted surface behind accent content */
+  --accent-wash: color-mix(in srgb, var(--accent) 14%, var(--paper-1)); /* tinted surface behind accent content */
 
   /* ---- system status. deliberately NOT bear/bull, so "offline" never
          reads as a bearish call. ---- */
@@ -155,7 +158,104 @@
 }
 
 /* ==========================================================================
-   Dark theme — OPTIONAL, Task 10 only. Ship light-only for now (plan §2.2).
-   Left undefined and unwired intentionally: do not set data-theme or
-   prefers-color-scheme until Task 10 actually ships a full dark pass.
+   Accent presets — swap [data-accent] on <html>. "navy" (the default) has
+   no block here since its values already live in :root above; unsetting
+   the attribute (useTheme.js) returns to it.
    ========================================================================== */
+
+:root[data-accent="forest"] {
+  --accent: #2f5233;
+  --accent-hi: #3c6b41;
+  --accent-lo: #234026;
+}
+
+:root[data-accent="plum"] {
+  --accent: #5b3358;
+  --accent-hi: #74436f;
+  --accent-lo: #452743;
+}
+
+:root[data-accent="rust"] {
+  --accent: #7a3b26;
+  --accent-hi: #96492f;
+  --accent-lo: #5f2e1d;
+}
+
+:root[data-accent="slate"] {
+  --accent: #3d4a5c;
+  --accent-hi: #4d5f75;
+  --accent-lo: #2f3947;
+}
+
+/* ==========================================================================
+   Dark theme — [data-theme="dark"] on <html> (see useTheme.js). Keeps the
+   same "one warm gray family" character as the light theme (§2.1) instead
+   of a neutral/blue-black gray, and re-tunes every semantic color's
+   lightness for contrast against a dark ground rather than reusing the
+   light-mode hex values as-is.
+   ========================================================================== */
+
+:root[data-theme="dark"] {
+  --paper-0: #17140f;
+  --paper-1: #1e1a13;
+  --paper-2: #272219;
+  --paper-3: #332c1f;
+
+  --rule-hair: #332c1f;
+  --rule: #453c29;
+  --rule-strong: #5c5038;
+
+  --ink-0: #f2ede1;
+  --ink-1: #cdc6b4;
+  --ink-2: #a39c89;
+  --ink-3: #756d5c;
+
+  --bull: #5fae82;
+  --bull-ink: #7fc79e;
+  --bear: #d17a63;
+  --bear-ink: #e0947f;
+  --flat: #a89d87;
+  --flat-ink: #c2b8a1;
+
+  --accent: #5c85c2;
+  --accent-hi: #6f97d4;
+  --accent-lo: #4a6fa3;
+
+  --warn: #d1a83e;
+  --warn-wash: #3a2f14;
+
+  --tag-violet: #9c89c2;
+  --tag-teal: #5cb3ac;
+  --tag-amber: #d1a259;
+  --tag-slate: #7d94bf;
+  --tag-rose: #c98ba0;
+
+  --shadow-pop: 0 1px 0 var(--rule-hair), 0 8px 24px -12px rgba(0, 0, 0, 0.45);
+  --shadow-drawer: -24px 0 48px -28px rgba(0, 0, 0, 0.5);
+}
+
+/* Dark-mode accent presets — the light-mode hex values above read too dark
+   against a dark ground, so each preset gets a re-tuned set here too. */
+:root[data-theme="dark"][data-accent="forest"] {
+  --accent: #6fae76;
+  --accent-hi: #82c08a;
+  --accent-lo: #5a9862;
+}
+
+:root[data-theme="dark"][data-accent="plum"] {
+  --accent: #b087af;
+  --accent-hi: #c29ac0;
+  --accent-lo: #9a729a;
+}
+
+:root[data-theme="dark"][data-accent="rust"] {
+  --accent: #d1876a;
+  --accent-hi: #dd9a80;
+  --accent-lo: #bc7057;
+}
+
+:root[data-theme="dark"][data-accent="slate"] {
+  --accent: #8fa2ba;
+  --accent-hi: #a1b3c8;
+  --accent-lo: #7890ab;
+}
