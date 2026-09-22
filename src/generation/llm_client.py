@@ -32,7 +32,7 @@ def _rate_limit_retry_delay_seconds(client_error) -> float | None:
         if entry.get("@type", "").endswith("RetryInfo"):
             raw = entry.get("retryDelay", "")
             try:
-                return float(raw.rstrip("s"))
+                return float(str(raw).rstrip("s"))
             except ValueError:
                 return None
     return None
@@ -70,6 +70,23 @@ def flatten_schema(schema: dict) -> dict:
     before handing the schema to the API.
     """
     return _resolve_refs(schema, schema.get("$defs", {}))
+
+
+class BlockedResponseError(RuntimeError):
+    """Raised when Gemini returns a response with no text part (safety
+    block, recitation block, or MAX_TOKENS truncation). `response.text` is
+    `None` in this case -- surfacing that as a TypeError/AttributeError deep
+    inside json.loads()/str.strip() gives callers no actionable signal."""
+
+
+def _extract_text(response) -> str:
+    if response.text is None:
+        reason = None
+        candidates = getattr(response, "candidates", None) or []
+        if candidates:
+            reason = getattr(candidates[0], "finish_reason", None)
+        raise BlockedResponseError(f"Gemini returned no text part (finish_reason={reason})")
+    return response.text
 
 
 class GeminiClient(LLMClient):
@@ -134,7 +151,7 @@ class GeminiClient(LLMClient):
                 response_schema=flatten_schema(schema),
             ),
         )
-        return json.loads(response.text)
+        return json.loads(_extract_text(response))
 
     def text_call(self, system, user):
         from google.genai import types
@@ -142,7 +159,7 @@ class GeminiClient(LLMClient):
         response = self._generate_with_retry(
             user, types.GenerateContentConfig(system_instruction=system)
         )
-        return response.text
+        return _extract_text(response)
 
 
 def get_client() -> LLMClient:

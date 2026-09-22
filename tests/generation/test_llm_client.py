@@ -21,9 +21,15 @@ class _FakeGenaiClient:
         self.models = _FakeModels(side_effects)
 
 
+class _FakeCandidate:
+    def __init__(self, finish_reason):
+        self.finish_reason = finish_reason
+
+
 class _FakeResponse:
-    def __init__(self, text):
+    def __init__(self, text, finish_reason=None):
         self.text = text
+        self.candidates = [_FakeCandidate(finish_reason)] if finish_reason else []
 
 
 def _make_client(monkeypatch, side_effects):
@@ -145,3 +151,43 @@ def test_text_call_does_not_retry_hard_quota_exhaustion_without_retry_delay(monk
         client.text_call("system", "user")
 
     assert client.client.models.calls == 1
+
+
+def test_text_call_raises_blocked_response_error_when_text_is_none(monkeypatch):
+    client = _make_client(monkeypatch, [_FakeResponse(None, finish_reason="SAFETY")])
+
+    with pytest.raises(llm_client_mod.BlockedResponseError, match="SAFETY"):
+        client.text_call("system", "user")
+
+
+def test_structured_call_raises_blocked_response_error_when_text_is_none(monkeypatch):
+    client = _make_client(monkeypatch, [_FakeResponse(None, finish_reason="MAX_TOKENS")])
+
+    with pytest.raises(llm_client_mod.BlockedResponseError, match="MAX_TOKENS"):
+        client.structured_call("system", "user", {"type": "object", "properties": {}})
+
+
+def test_structured_call_returns_parsed_json_when_text_present(monkeypatch):
+    client = _make_client(monkeypatch, [_FakeResponse('{"foo": "bar"}')])
+
+    result = client.structured_call("system", "user", {"type": "object", "properties": {}})
+
+    assert result == {"foo": "bar"}
+
+
+def test_flatten_schema_inlines_nested_refs():
+    import src.generation.schema as schema_mod
+
+    schema = schema_mod.Signal.model_json_schema()
+    assert "$defs" in schema  # sanity: the input actually has nested refs to flatten
+
+    flat = llm_client_mod.flatten_schema(schema)
+
+    assert "$defs" not in flat
+    flat_str = str(flat)
+    assert "$ref" not in flat_str
+    # the nested SupportingClaim model's own fields must have been inlined,
+    # not just stripped -- confirm its properties survived the flattening
+    claims_schema = flat["properties"]["supporting_claims"]["items"]
+    assert "properties" in claims_schema
+    assert "chunk_id" in claims_schema["properties"]

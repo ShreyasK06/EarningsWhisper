@@ -2,7 +2,7 @@
 """CLI: generate a signal for every ingested filing, backtest against
 realized forward returns, print the results table.
 
-Requires ANTHROPIC_API_KEY in .env and internet access for yfinance.
+Requires GEMINI_API_KEY in .env and internet access for yfinance.
 
 Usage:
     python scripts/backtest.py
@@ -37,22 +37,31 @@ def list_filings() -> list[dict]:
 
 def run():
     signals = []
-    for filing in list_filings():
-        ticker, quarter = filing["ticker"], filing["fiscal_quarter"]
-        print(f"generating signal for {ticker} {quarter} ({filing['filed_datetime']})...")
-        signal, _ = generate_signal(ticker, fiscal_quarter=quarter)
-        signals.append({
-            "ticker": ticker,
-            "fiscal_quarter": quarter,
-            "filed_datetime": filing["filed_datetime"],
-            "signal": signal.signal,
-            "confidence": signal.confidence,
-        })
-
+    skipped = []
     with SIGNALS_PATH.open("w", encoding="utf-8") as f:
-        for s in signals:
+        for filing in list_filings():
+            ticker, quarter = filing["ticker"], filing["fiscal_quarter"]
+            print(f"generating signal for {ticker} {quarter} ({filing['filed_datetime']})...")
+            try:
+                signal, _ = generate_signal(ticker, fiscal_quarter=quarter)
+            except Exception as e:
+                print(f"  SKIP {ticker} {quarter}: {type(e).__name__}: {e}")
+                skipped.append((ticker, quarter))
+                continue
+            s = {
+                "ticker": ticker,
+                "fiscal_quarter": quarter,
+                "filed_datetime": filing["filed_datetime"],
+                "signal": signal.signal,
+                "confidence": signal.confidence,
+            }
+            signals.append(s)
             f.write(json.dumps(s) + "\n")
+            f.flush()
+
     print(f"\nwrote {len(signals)} signals -> {SIGNALS_PATH}")
+    if skipped:
+        print(f"skipped {len(skipped)} filings after a generation failure: {skipped}")
 
     df = score(signals)
     print(f"\nNote: n={len(df)} signals is not a statistically meaningful sample -- "
