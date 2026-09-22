@@ -81,3 +81,67 @@ def test_text_call_retries_on_timeout_then_succeeds(monkeypatch):
 
     assert result == "ok"
     assert client.client.models.calls == 2
+
+
+def _rate_limit_error(retry_delay="1s"):
+    from google.genai import errors
+
+    return errors.ClientError(
+        429,
+        {
+            "error": {
+                "code": 429,
+                "status": "RESOURCE_EXHAUSTED",
+                "message": f"quota exceeded, retry in {retry_delay}",
+                "details": [
+                    {
+                        "@type": "type.googleapis.com/google.rpc.RetryInfo",
+                        "retryDelay": retry_delay,
+                    }
+                ],
+            }
+        },
+    )
+
+
+def test_text_call_retries_on_rate_limit_with_retry_delay_then_succeeds(monkeypatch):
+    client = _make_client(monkeypatch, [_rate_limit_error("1s"), _FakeResponse("ok")])
+
+    result = client.text_call("system", "user")
+
+    assert result == "ok"
+    assert client.client.models.calls == 2
+
+
+def test_text_call_stops_after_max_rate_limit_retries(monkeypatch):
+    from google.genai import errors
+
+    effects = [_rate_limit_error("1s")] * (llm_client_mod.MAX_RATE_LIMIT_RETRIES + 1)
+    client = _make_client(monkeypatch, effects)
+
+    with pytest.raises(errors.ClientError):
+        client.text_call("system", "user")
+
+    assert client.client.models.calls == llm_client_mod.MAX_RATE_LIMIT_RETRIES + 1
+
+
+def test_text_call_does_not_retry_hard_quota_exhaustion_without_retry_delay(monkeypatch):
+    from google.genai import errors
+
+    hard_quota_error = errors.ClientError(
+        429,
+        {
+            "error": {
+                "code": 429,
+                "status": "RESOURCE_EXHAUSTED",
+                "message": "daily quota exceeded",
+                "details": [],
+            }
+        },
+    )
+    client = _make_client(monkeypatch, [hard_quota_error, _FakeResponse("unreachable")])
+
+    with pytest.raises(errors.ClientError):
+        client.text_call("system", "user")
+
+    assert client.client.models.calls == 1

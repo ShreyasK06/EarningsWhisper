@@ -11,6 +11,31 @@ from abc import ABC, abstractmethod
 MAX_RETRIES = 4
 RETRY_BACKOFF_SECONDS = 2
 REQUEST_TIMEOUT_MS = 60_000
+MAX_RATE_LIMIT_RETRIES = 3
+MAX_RATE_LIMIT_DELAY_SECONDS = 90
+
+
+def _rate_limit_retry_delay_seconds(client_error) -> float | None:
+    """Extract Google's suggested retry delay from a 429 response, if present.
+
+    Only genuine per-minute rate limits carry a RetryInfo.retryDelay --
+    a hard daily-quota exhaustion does not, so the absence of this field
+    is itself the signal to fail fast rather than retry blindly.
+    """
+    details = getattr(client_error, "details", None)
+    if not isinstance(details, dict):
+        return None
+    error = details.get("error", {})
+    if error.get("status") != "RESOURCE_EXHAUSTED":
+        return None
+    for entry in error.get("details", []):
+        if entry.get("@type", "").endswith("RetryInfo"):
+            raw = entry.get("retryDelay", "")
+            try:
+                return float(raw.rstrip("s"))
+            except ValueError:
+                return None
+    return None
 
 
 class LLMClient(ABC):
@@ -70,21 +95,33 @@ class GeminiClient(LLMClient):
     def _generate_with_retry(self, contents, config):
         """Retry on transient server errors (e.g. 503 model-overloaded) and
         request timeouts (a stalled socket never errors on its own without
-        REQUEST_TIMEOUT_MS -- see the http_options set in __init__);
-        propagate client errors (e.g. bad request, auth, quota) immediately,
-        since retrying those wastes quota for no benefit."""
+        REQUEST_TIMEOUT_MS -- see the http_options set in __init__), and on
+        429s that carry a server-suggested retryDelay (a per-minute rate
+        limit, not a hard quota). Any other client error (bad request, auth,
+        or a 429 with no retryDelay -- e.g. a hard daily-quota exhaustion)
+        propagates immediately, since retrying those wastes quota for no
+        benefit."""
         import httpx
         from google.genai import errors
 
-        for attempt in range(MAX_RETRIES + 1):
+        server_attempts = 0
+        rate_limit_attempts = 0
+        while True:
             try:
                 return self.client.models.generate_content(
                     model=self.model_name, contents=contents, config=config
                 )
             except (errors.ServerError, httpx.TimeoutException):
-                if attempt == MAX_RETRIES:
+                if server_attempts >= MAX_RETRIES:
                     raise
-                time.sleep(RETRY_BACKOFF_SECONDS * (2**attempt))
+                time.sleep(RETRY_BACKOFF_SECONDS * (2**server_attempts))
+                server_attempts += 1
+            except errors.ClientError as e:
+                delay = _rate_limit_retry_delay_seconds(e)
+                if delay is None or rate_limit_attempts >= MAX_RATE_LIMIT_RETRIES:
+                    raise
+                time.sleep(min(delay, MAX_RATE_LIMIT_DELAY_SECONDS))
+                rate_limit_attempts += 1
 
     def structured_call(self, system, user, schema):
         from google.genai import types
