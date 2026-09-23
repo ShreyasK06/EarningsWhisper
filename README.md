@@ -2,6 +2,10 @@
 
 RAG system over SEC 8-K earnings-release filings that retrieves grounded excerpts, generates structured trading signals with citations, judges those signals for faithfulness, and backtests them against realized forward returns -- plus a FastAPI + React product layer on top.
 
+**Live demo:** [shreyask06.github.io/EarningsWhisper](https://shreyask06.github.io/EarningsWhisper/)
+
+GitHub Pages only serves static files, so the deployed page can't host the Python backend or the local Qdrant index -- it's the UI alone. Browsing tickers and Google sign-in work immediately; chat (grounded Q&A and directional calls) needs the backend running locally while you have the deployed page open (`uvicorn api.main:app --reload --port 8000` -- see "Running it" below). Sign-in and per-ticker chat history are backed by Firebase directly from the browser, so those work against the deployed page regardless of whether the backend is up.
+
 ## Why should this text predict price movement better than chance?
 
 Reported numbers -- revenue, EPS, segment growth -- are priced in within seconds by algorithmic traders reading the same 8-K the moment it hits EDGAR. What isn't priced in as quickly is the *qualitative* language wrapped around those numbers: a CFO attributing a margin beat to a one-time tariff refund rather than durable pricing power, a guidance range that quietly widens or narrows quarter over quarter, or management's own hedging about whether a growth driver is repeatable. That signal is slower to be fully incorporated because it requires reading and judgment, not just parsing a number -- which is exactly the gap a retrieval-grounded language model can exploit. If this system can't out-predict a coin flip on directional hit rate once backtested, the retrieval/generation infrastructure doesn't matter, and this README says so plainly below rather than hiding it.
@@ -87,7 +91,7 @@ SEC EDGAR (8-K filings)
 
 **Backtest** (`src/backtest/`): scores signals against realized `yfinance` forward returns, entering at the next session's open whenever a filing landed at or after market open (derived from the exact SEC `ACCEPTANCE-DATETIME`, not a guessed flag) -- avoiding intraday lookahead bias.
 
-**Product layer**: `api/main.py` -- FastAPI `/chat` endpoint routing each message to either open Q&A (`reranked_search` + a grounded answer with citations) or a directional signal call, plus `/tickers`. `frontend/` -- a React + Vite app consuming that API.
+**Product layer**: `api/main.py` -- FastAPI `/chat` endpoint routing each message to either open Q&A (`reranked_search` + a grounded answer with citations) or a directional signal call, plus `/tickers`. `frontend/` -- a React + Vite app consuming that API, with dark mode/accent theming and optional Google sign-in (Firebase Auth) that persists each ticker's chat history to Firestore -- entirely additive: with no Firebase project configured, the app works exactly as it does signed out (see `docs/superpowers/specs/2026-09-22-firebase-chat-persistence-design.md`).
 
 **Golden set** (`data/golden/eval_set.jsonl`): **47 questions** -- see "Golden-set provenance" below for how the 20 -> 47 expansion was done and how it's disclosed.
 
@@ -151,3 +155,7 @@ python scripts/backtest.py
 uvicorn api.main:app --reload --port 8000
 cd frontend && npm install && npm run dev
 ```
+
+### Deployment
+
+`.github/workflows/deploy-pages.yml` builds `frontend/` and deploys it to GitHub Pages on every push to `main` that touches `frontend/`. The build's `base` path (`vite.config.js`) and the Firebase web config it's built with (`frontend/.env.production` -- non-secret, see "What requires manual setup" in the design spec linked above) are both fixed to this repo's Pages URL. Only the frontend ships this way; the backend and Qdrant index stay local (see "Live demo" above for what that means in practice).

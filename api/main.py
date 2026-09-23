@@ -26,7 +26,10 @@ from src.retrieval.rerank import reranked_search
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Vite dev server
+    allow_origins=[
+        "http://localhost:5173",  # Vite dev server
+        "https://shreyask06.github.io",  # GitHub Pages build, talking to a local backend
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )

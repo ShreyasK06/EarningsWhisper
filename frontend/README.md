@@ -40,6 +40,11 @@ The API base URL is controlled by the `VITE_API_BASE` environment
 variable — see `.env.example`. It defaults to `http://localhost:8000` when
 unset, so no `.env` file is required for the default local setup.
 
+Google sign-in and per-ticker chat-history persistence are optional and
+additive — with no `VITE_FIREBASE_*` vars set (see `.env.example`), the app
+works exactly as it does signed out. Details in
+`../docs/superpowers/specs/2026-09-22-firebase-chat-persistence-design.md`.
+
 ## Linting
 
 ```
@@ -47,3 +52,11 @@ npm run lint
 ```
 
 Runs oxlint over the project.
+
+## Deployment
+
+Pushes to `main` that touch this directory build and deploy it to GitHub
+Pages via `../.github/workflows/deploy-pages.yml`. `vite.config.js` sets
+`base: '/EarningsWhisper/'` only for `npm run build` (not `npm run dev`) to
+match that URL, and `.env.production` bakes in the live Firebase config
+that build uses — see the root README's "Deployment" section.
