@@ -1,6 +1,10 @@
 data/raw/
 data/analysis/
-qdrant_data/
+# qdrant_data/ is committed -- the deployed backend (Dockerfile) ships the
+# pre-built index directly rather than re-running ingestion on the host.
+# .lock is a transient runtime lock file recreated on every open, not index
+# data -- see qdrant_local.py's portalocker usage.
+qdrant_data/.lock
 __pycache__/
 *.pyc
 .venv/
